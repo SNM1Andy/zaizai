@@ -1,0 +1,4 @@
+CL_MEMORY_1 {
+  global: cl_abi_version_v1; cl_runtime_features_v1; cl_package_ir_v1; cl_profile_compile_v1; cl_profile_rebuild_v1; cl_profile_rebuild_audit_v1; cl_package_proof_v1; cl_package_proof_bounded_v1; cl_package_checkpoint_audit_v1; cl_evidence_buffer_init_v1; cl_evidence_buffer_batch_v1; cl_evidence_freeze_v1; cl_evidence_verify_v1; cl_evidence_integrity_v1; cl_workspace_pack_v1; cl_workspace_ir_v1; cl_workspace_proof_v1; cl_workspace_prepare_v1; cl_prepared_workspace_proof_v1; cl_prepared_workspace_close_v1; cl_workspace_rebuild_v1; cl_package_proof_with_projection_v1; cl_workspace_proof_with_projection_v1; cl_compare_packages_v1; cl_workspace_branch_additive_v1; cl_package_profile_v1; cl_workspace_profile_v1; cl_free_v1;
+  local: *;
+};

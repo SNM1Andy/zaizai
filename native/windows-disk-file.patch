@@ -1,0 +1,10 @@
+--- a/source/native-os-win.hpp
++++ b/source/native-os-win.hpp
+@@ -61,6 +61,7 @@
+ struct ReadMessages {const char *directory,*open,*kind,*read,*limit;};
+ inline std::string read_owned_descriptor(int fd,size_t cap,const ReadMessages& msg){
+     if(fd<0)throw std::runtime_error(msg.open);
++    if(GetFileType(handle(fd))!=FILE_TYPE_DISK)throw std::runtime_error(msg.kind);
+     if(info(fd).dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)throw std::runtime_error(msg.kind);
+     std::string out; char buf[16384]; int n;
+     while((n=_read(fd,buf,sizeof buf))>0){

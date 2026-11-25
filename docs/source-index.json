@@ -1,0 +1,622 @@
+{
+  "public_host_version": "2026.11.25-win.2.4",
+  "excludes_self": "docs/source-index.json",
+  "files": {
+    "docs/architecture-30.zh-CN.md": {
+      "sha256": "a1489fc5f5b407bc8d9fea1f38fe976465eb45e13f705c5e23cb070ca8d9f019",
+      "source": "用户选定的项目设计稿《再再 3.0 蓝图：自主成长的人工生命（v0.1 草案）.md》的技术段落"
+    },
+    "docs/cl-pcgm.zh-CN.md": {
+      "sha256": "4d5e7281e53cd1ee2bd18f49d53f5192f4e8c081d27d8a0a876cffc6183cf061",
+      "source": "用户选定的项目设计稿《CL与PCGM-全面定义.md》的技术段落"
+    },
+    "docs/host-lifecycle-31.zh-CN.md": {
+      "sha256": "069f92157155bf36bf9534bf020603705816b0e25b19b942da537bbbb1b3eb2e",
+      "source": "用户选定的项目设计稿《再再 3.1 蓝图：宿主与生命侧（CL、PCGM 留空版）.md》的技术段落"
+    },
+    "docs/host-slots-31.zh-CN.md": {
+      "sha256": "b678b44a9c8d7066d43215b3aa692f2bc5c4caad0ca49cb3805fe3c9a5ee780b",
+      "source": "用户选定的项目设计稿《再再 3.1 蓝图：宿主与生命侧（CL、PCGM 留空版）.md》的技术段落"
+    },
+    "docs/innate-geometry.zh-CN.md": {
+      "sha256": "88a156a10ed4e5f773ab312b737d03f7d91839d78a8fcc54194d26a6f898f8e1",
+      "source": "用户选定的项目设计稿《原趋与本能几何-原设计决议.md》的技术段落"
+    },
+    "docs/source-notes.zh-CN.md": {
+      "sha256": "2c618e184964b4f37ce3bf723aa5212d20d6541cb85dfabf2d45b30470a1a623",
+      "source": "公开源代码范围与署名"
+    },
+    "docs/source-provenance.zh-CN.md": {
+      "sha256": "e76208b7db6ad8870dec83b500db967f28673b66395e5f878b30bd52538d5852",
+      "source": "Grok 来源评估交付《来源记录契约》技术定义"
+    },
+    "docs/windows-host-setup.zh-CN.md": {
+      "sha256": "fb1e2f9ddbabca4c65c8cc673160ae9c5534152557940c5aa360827e9359d2ab",
+      "source": "公开版安装与材料边界说明；根据本仓库宿主代码编写"
+    },
+    "docs/windows-requirements.zh-CN.md": {
+      "sha256": "7b3959374c9870182984f489ab045f49d31ec674cb1f179246089d280708edb9",
+      "source": "《本地再再功能需求与验收》W01–W18 工程要求和验收操作（公开节选）"
+    },
+    "host/adoption_gate.py": {
+      "sha256": "99138f1b40ea9f691dfaa16048c6acebff55648ded507fdaf15f682305a409fe",
+      "source": "Windows 2.4 正式发行 host/adoption_gate.py"
+    },
+    "host/advisor/harness_route.py": {
+      "sha256": "391b30d4074a701ff7f23e5a5729dc229b25b5d5bd41248c2fd3560991f786f4",
+      "source": "Windows 2.4 正式发行 host/advisor/harness_route.py；公开版适配"
+    },
+    "host/advisor/harness_translate.mjs": {
+      "sha256": "e4cf783317361a6531b4dad8e214877f1f47c43e520ae2611ce0788f3eef5095",
+      "source": "Windows 2.4 正式发行 host/advisor/harness_translate.mjs"
+    },
+    "host/advisor/harness_translate.patch.yml": {
+      "sha256": "ef95bb858828dca14a273bfe7a92ed55384b36c9a0e65e5b758494d603806769",
+      "source": "Windows 2.4 正式发行 host/advisor/harness_translate.patch.yml"
+    },
+    "host/advisor/terms.mjs": {
+      "sha256": "2cc5bb79487c9eadb536e71217cd328a8c8656e92b5c19ad72413dfe1874ae0a",
+      "source": "Windows 2.4 正式发行 host/advisor/terms.mjs"
+    },
+    "host/advisor/terms.patch.yml": {
+      "sha256": "ac54ec4e687581742fec55c7eb4e6872de35ad163eec674dceb111c2310cb8ef",
+      "source": "Windows 2.4 正式发行 host/advisor/terms.patch.yml"
+    },
+    "host/advisor_client.py": {
+      "sha256": "1e8ec093914b4e4eddb83af2071c7a691f59b12072e33d4a422b77e3db5e41a8",
+      "source": "Windows 2.4 正式发行 host/advisor_client.py；公开版适配"
+    },
+    "host/autonomy_reconcile25.py": {
+      "sha256": "847113c73de763e10ee25aa6d44b3b9342e6859cbc459e4b54c4e38b80465ef7",
+      "source": "Windows 2.4 正式发行 host/autonomy_reconcile25.py"
+    },
+    "host/cl_conversation.py": {
+      "sha256": "b17f474044a1bc8e2ae7b0b69e1d80d06cb400aeecea6df78b6e1c3f331e5609",
+      "source": "Windows 2.4 正式发行 host/cl_conversation.py"
+    },
+    "host/clause_read25.py": {
+      "sha256": "0f4374d3d7cab7db554ec0d282a3ee58983d0b8dac296b3c89950583d45f51c1",
+      "source": "Windows 2.4 正式发行 host/clause_read25.py"
+    },
+    "host/context25.cl": {
+      "sha256": "fd093e745b3d7d39d7fec5d730f039712e0a2ed9d3befac82704afaab9410571",
+      "source": "Windows 2.4 正式发行 host/context25.cl"
+    },
+    "host/context25.py": {
+      "sha256": "ec08f02083a46976e6c3e62ae590ca6c6c4752933e8686257d11cb014fccb1f3",
+      "source": "Windows 2.4 正式发行 host/context25.py"
+    },
+    "host/corelex25.json": {
+      "sha256": "d45f3691d7ce5ac898fc3e425e85af802ee29a35997000b5998da4619377a618",
+      "source": "Windows 2.4 正式发行 host/corelex25.json"
+    },
+    "host/corelex25.py": {
+      "sha256": "8545b6ec80e6bcaeafc00a5d6b7726a8a016437d3227bebfb08c8eb8b80ba954",
+      "source": "Windows 2.4 正式发行 host/corelex25.py"
+    },
+    "host/delegated25.py": {
+      "sha256": "097fd6c42d819d9074fe2117b13f6549056239352468ac45980f5ec1787c4d03",
+      "source": "Windows 2.4 正式发行 host/delegated25.py"
+    },
+    "host/desktop.py": {
+      "sha256": "6ba7e7aa5e12a1087e579911e1e6eeaf15d0785e637f90c594dbb273bbc6bf69",
+      "source": "Windows 2.4 正式发行 host/desktop.py"
+    },
+    "host/desktop_criteria.cl": {
+      "sha256": "9af03bcebdd9c37a00cf7bf4d3fab57ee903e94dc389ff56c456b2235e1e5b1e",
+      "source": "Windows 2.4 正式发行 host/desktop_criteria.cl"
+    },
+    "host/dialogue-aliases.json": {
+      "sha256": "898bfac97edc5f8d6280730c5c7528a7fb4002b41357624961ab615c4647be80",
+      "source": "本次原创公开别名示例"
+    },
+    "host/discourse25.py": {
+      "sha256": "9998a02b16b12526a29dd922b585aad04a7ceb76d77dcc6cda4b1692e54f2e9e",
+      "source": "Windows 2.4 正式发行 host/discourse25.py"
+    },
+    "host/evolution3.py": {
+      "sha256": "5a16af42f7a8f5048c0e2e6255bcab405e97133e9298247057dbf1828b004091",
+      "source": "Windows 2.4 正式发行 host/evolution3.py"
+    },
+    "host/field31_status.py": {
+      "sha256": "bd40b15aedc13ad6852aa59f3de202386fd13e4b0df2b1081f61860172757536",
+      "source": "Windows 2.4 正式发行 host/field31_status.py"
+    },
+    "host/gpu_readout.py": {
+      "sha256": "41d3a9533a273b74a239070e64ba0ca25e31073bed619573e3f43668db19ec5f",
+      "source": "Windows 2.4 正式发行 host/gpu_readout.py"
+    },
+    "host/host_exam31.py": {
+      "sha256": "1f9f81f84d722086174c7bf81c23edc181a9622f6015d3a5f5d35794b39bfabd",
+      "source": "Windows 2.4 正式发行 host/host_exam31.py"
+    },
+    "host/host_memory31.py": {
+      "sha256": "3b169b72c8d1ec1343dd17c578b6c286255b9513b519549d36f36ef4e2ae2ef0",
+      "source": "Windows 2.4 正式发行 host/host_memory31.py"
+    },
+    "host/host_turn31.py": {
+      "sha256": "bd9539ca8d642592bdf4a173a406d34d2ef0df3093005197e6b3802e014a43e0",
+      "source": "Windows 2.4 正式发行 host/host_turn31.py"
+    },
+    "host/inner3.py": {
+      "sha256": "b3df77329ed56d01badc3bde79f9381eccefeb7785a42b6a8e60f4e4841ce980",
+      "source": "Windows 2.4 正式发行 host/inner3.py"
+    },
+    "host/inquiry3.py": {
+      "sha256": "1d2afe678023d1eb71148e978f21494d9b0ef47e96064a9131eae2202c00c5c1",
+      "source": "Windows 2.4 正式发行 host/inquiry3.py"
+    },
+    "host/joint25-providers.json": {
+      "sha256": "cf070fb20ba457a49aa075cbbcfde4d443a5b4271c0ba921b77dde7e0a13c0ce",
+      "source": "Windows 2.4 正式发行 host/joint25-providers.json"
+    },
+    "host/joint25_agenda_host.py": {
+      "sha256": "7ae335ac454d795492873e387d02f91ded63839bca9dbeb0683aa40a55ced5c6",
+      "source": "Windows 2.4 正式发行 host/joint25_agenda_host.py"
+    },
+    "host/joint25_evidence.py": {
+      "sha256": "247c86cfdcbaad12d45077ddb84bb4a0c58aae69efa182273017201968cd9052",
+      "source": "Windows 2.4 正式发行 host/joint25_evidence.py"
+    },
+    "host/joint25_language.py": {
+      "sha256": "6d40e4b8812cd82348d762d2f1321a2a65474ffe3f23916d5c094df67129ee3b",
+      "source": "Windows 2.4 正式发行 host/joint25_language.py"
+    },
+    "host/joint25_materials.py": {
+      "sha256": "37f8b68ef11d5de42b3c28b7fb9488452be24d8592c99bde34f49edf6a334c45",
+      "source": "Windows 2.4 正式发行 host/joint25_materials.py"
+    },
+    "host/joint25_runtime.py": {
+      "sha256": "11f7bb9d16c0752f27dec9f01467e18b2ca40b547c09bcb6710bae16c3f50397",
+      "source": "Windows 2.4 正式发行 host/joint25_runtime.py"
+    },
+    "host/joint25_window.py": {
+      "sha256": "e14dc4cf31a291dae2162714ee2b62419bf7fb9f045df833f6126964497b3269",
+      "source": "Windows 2.4 正式发行 host/joint25_window.py；公开版适配"
+    },
+    "host/language_boundary25.py": {
+      "sha256": "c2d5f56daf46f0338c360a8c21c2e1e3f85cd68e0c846c5f12c73360342a0fcc",
+      "source": "Windows 2.4 正式发行 host/language_boundary25.py"
+    },
+    "host/language_boundary25_v2.py": {
+      "sha256": "9e99d0bd9adfe7dc9641e5e2b3bc846e1dfb126eabdebbb443fc3451788ad827",
+      "source": "Windows 2.4 正式发行 host/language_boundary25_v2.py"
+    },
+    "host/language_read25.py": {
+      "sha256": "35a6a220ac3547b921bd576ac0f8a81ca42497d7c845785a2df25ec34c3ee0d7",
+      "source": "Windows 2.4 正式发行 host/language_read25.py"
+    },
+    "host/learning.cl": {
+      "sha256": "0d543bb1d26ecfe6926cd11ebf42c1cb0915bbb6e2e8fb4a695fbe4ed5fd5cc9",
+      "source": "Windows 2.4 正式发行 host/learning.cl"
+    },
+    "host/learning_governance25.py": {
+      "sha256": "5effd29e0353d459f8e3b2b93287940f84ef1d57301b863b25cfee5b7553cc0f",
+      "source": "Windows 2.4 正式发行 host/learning_governance25.py"
+    },
+    "host/legacy_dialogue31.py": {
+      "sha256": "b83a6f43775fe4838a129207713f5eddf72df682139b514cbfe2c04e72a45682",
+      "source": "Windows 2.4 正式发行 host/legacy_dialogue31.py"
+    },
+    "host/legacy_memory.py": {
+      "sha256": "f2d2be715bc2d61b9e0bd3139ac3dcb0f7033be882dde45baf668ce2ed8ebdbb",
+      "source": "Windows 2.4 正式发行 host/legacy_memory.py"
+    },
+    "host/legacy_workbook31.py": {
+      "sha256": "2edafe68e02a578ed74f5daa636099a2d59b975072c02fc4dbe741cabe52cfa4",
+      "source": "Windows 2.4 正式发行 host/legacy_workbook31.py"
+    },
+    "host/lexref25.cl": {
+      "sha256": "314b967e416d00e1178f003e0447008c7bd387212b365d26ce9a6ae21a1a3504",
+      "source": "Windows 2.4 正式发行 host/lexref25.cl"
+    },
+    "host/lexref25_host.py": {
+      "sha256": "f939e275c05e558b85aa1652e8b5d0d54f803db7017d2673ddf576884cd3532c",
+      "source": "Windows 2.4 正式发行 host/lexref25_host.py"
+    },
+    "host/life3.py": {
+      "sha256": "eea38b08084116daf2c5cf030f8a4c7eb1f14784c912036b57c7e45d4e77ec03",
+      "source": "Windows 2.4 正式发行 host/life3.py"
+    },
+    "host/life3_worker.py": {
+      "sha256": "36b2d24c9b1777082eaa5e4af0b0b9c768d0c93bdc26ba633a6b22908cca698e",
+      "source": "Windows 2.4 正式发行 host/life3_worker.py"
+    },
+    "host/life_slots31.py": {
+      "sha256": "d8c636737e24bc60f3c6f2a31c23db20fcc77e823eedb280966fca62f311e16c",
+      "source": "Windows 2.4 正式发行 host/life_slots31.py"
+    },
+    "host/native.py": {
+      "sha256": "f2f0eec658ede085b4850b2e0dc40cc59a647a92a9856e10daf384f02dca751f",
+      "source": "Windows 2.4 正式发行 host/native.py"
+    },
+    "host/native_lexref25.py": {
+      "sha256": "5b54564b7552132278e803e93743c7135f50a94add47f9782def07d9ea569244",
+      "source": "Windows 2.4 正式发行 host/native_lexref25.py"
+    },
+    "host/release25_lexicon.py": {
+      "sha256": "2d693fa6b9aea4ce47f9c3295463b996bd1dafa17957f63fb996d8a05079a75d",
+      "source": "Windows 2.4 正式发行 host/release25_lexicon.py"
+    },
+    "host/round31.py": {
+      "sha256": "68562fdfea770bef72127d2c3f840a38dfabc23c447ae8dcde94cbf961b05ef8",
+      "source": "Windows 2.4 正式发行 host/round31.py"
+    },
+    "host/scope_existing25.py": {
+      "sha256": "a2c07437fd02af83ed93afa6bffb3b2706e8264a78679a0b5749036dfed20126",
+      "source": "Windows 2.4 正式发行 host/scope_existing25.py"
+    },
+    "host/service.py": {
+      "sha256": "9e4b32cc1466bc271e221388913fa6528893fe7629ead76ce0e71620652516e7",
+      "source": "Windows 2.4 正式发行 host/service.py"
+    },
+    "host/slot31_legacy.py": {
+      "sha256": "c356efa5793074bb222293c923dd7b4c1386dbefe7adb4b450b33255041e9ad7",
+      "source": "Windows 2.4 正式发行 host/slot31_legacy.py"
+    },
+    "host/slot31_transport.py": {
+      "sha256": "4b54a0a2acba01badaf2a790b0e62b8c37106cfc01a4197af055840c40bf0579",
+      "source": "Windows 2.4 正式发行 host/slot31_transport.py；公开版澄清注册注释"
+    },
+    "host/slots31.py": {
+      "sha256": "18209018816ef8719724e94181a5516639859a1541f9e9874688a1faaa9aebcd",
+      "source": "Windows 2.4 正式发行 host/slots31.py"
+    },
+    "host/source_provenance25.py": {
+      "sha256": "138538107a17fa959f929218e503b7eeab27a5a7fe64c0e92d0dea87d4aae201",
+      "source": "Windows 2.4 正式发行 host/source_provenance25.py"
+    },
+    "host/study3.py": {
+      "sha256": "3bd3262a9d9612c9c716b8404c2c67e5817715e5bdbab9513c314c24bb4e86b9",
+      "source": "Windows 2.4 正式发行 host/study3.py；公开版适配"
+    },
+    "host/study3_assets/catalog.json": {
+      "sha256": "d2e31f831c20ae622c4474851e8c260ad5bbc7c7e23aab5e59bab8f17f731f2d",
+      "source": "本次原创三卡公开教学样例"
+    },
+    "host/study3_assets/frozen_exams.json": {
+      "sha256": "563f9c3ad2595e0d08e8aa264cb2456f7d6f003edc11c440a48222086827c618",
+      "source": "Windows 2.4 正式发行 host/study3_assets/frozen_exams.json"
+    },
+    "host/study3_assets/operational_examples.json": {
+      "sha256": "49d5f40946c4549d147a7451e99e048c4fb54beb9eb50490db611c6a9e672284",
+      "source": "Windows 2.4 正式发行 host/study3_assets/operational_examples.json"
+    },
+    "host/turn_reference25.py": {
+      "sha256": "d5ad3f70cb93b6e998833d8c1415838b37f674838e3cda07b35d19eb82751625",
+      "source": "Windows 2.4 正式发行 host/turn_reference25.py"
+    },
+    "host/verify_sense_version.py": {
+      "sha256": "613d2719ac951f7336ff218f48e98cbfee198be3a92ef66f1fdaf60545f6f1f5",
+      "source": "Windows 2.4 正式发行 host/verify_sense_version.py"
+    },
+    "host/watchdog3.py": {
+      "sha256": "149a161778e7a118cc75a8358ea2b8cec9349ac3c5763a41d04a3f090c138c85",
+      "source": "Windows 2.4 正式发行 host/watchdog3.py"
+    },
+    "host/window_base.py": {
+      "sha256": "7d2804e77c7b393066e02d929ab8e153d4ed02ab04bfd9d665a7be970f65f2ca",
+      "source": "Windows 2.4 正式发行 host/window_base.py"
+    },
+    "host/windows_identity25.py": {
+      "sha256": "3f5a91bd76b156d8d3b7750bb9569f18598ef28a3973ca4ec22a0db5a6bb83a1",
+      "source": "Windows 2.4 正式发行 host/windows_identity25.py；公开版适配"
+    },
+    "integrations/grok/cl-pcgm-03-grok/source_observation/__init__.py": {
+      "sha256": "635e1448f6a16a74f1c3e5f3064eb4a2f5d3c95cb807436bc255267a1a09b068",
+      "source": "Grok 来源观察包 source_observation/__init__.py"
+    },
+    "integrations/grok/cl-pcgm-03-grok/source_observation/__main__.py": {
+      "sha256": "ddc08df501d84e4c18d8650c7f9bd7172976c1640f0a4be5df80673c01df1b46",
+      "source": "Grok 来源观察包 source_observation/__main__.py"
+    },
+    "integrations/grok/cl-pcgm-03-grok/source_observation/adapter.py": {
+      "sha256": "6a8ceec69921c757e72adc3c33b0aa59ed01dbb8bd3e973786d3e530864860a5",
+      "source": "Grok 来源观察包 source_observation/adapter.py"
+    },
+    "integrations/grok/cl-pcgm-03-grok/source_observation/classify.py": {
+      "sha256": "edc466d4a1e9b518d62d83c2ed6e557b403d6fffe291a60d631fa16e824bebc4",
+      "source": "Grok 来源观察包 source_observation/classify.py"
+    },
+    "integrations/grok/cl-pcgm-03-grok/source_observation/shipped.py": {
+      "sha256": "382ce9cf50f6b233d4d5947e96dd17939b68c39f94187d5a0a0ca33cc439ccbe",
+      "source": "Grok 来源观察包 source_observation/shipped.py"
+    },
+    "integrations/grok/zaizai-source-provenance/test_source_provenance.py": {
+      "sha256": "c3c2eebad9eb2ebe06fc828bf4c44d65e7bca2bca12698577d7b20effb2e8ec9",
+      "source": "Grok 历史来源契约的判定函数与检查器源码"
+    },
+    "releases/joint25/assets/dialogue25.cl": {
+      "sha256": "371fe27596db79243dc06d8080a602d00ae15ca11c04cb959c1d7773d1509e04",
+      "source": "Windows 2.4 联合发行 assets/dialogue25.cl"
+    },
+    "releases/joint25/assets/operators.json": {
+      "sha256": "ffef594c83b0b348526313733313d6a037dd4405bc4330cd654084cedf0c2b7a",
+      "source": "Windows 2.4 联合发行 assets/operators.json"
+    },
+    "releases/joint25/language/zaizai_adapter/__init__.py": {
+      "sha256": "25fe1a168d77483c1e660aac4f408f6e7bf9cad63651fd56d350ae7f41515e2c",
+      "source": "Windows 2.4 联合发行 language/zaizai_adapter/__init__.py"
+    },
+    "releases/joint25/language/zaizai_adapter/cli.py": {
+      "sha256": "f2c25fdbc53390a40b146f90106a743f0893100b44845ad6b338d755edb898b9",
+      "source": "Windows 2.4 联合发行 language/zaizai_adapter/cli.py"
+    },
+    "releases/joint25/language/zaizai_adapter/lexicon.py": {
+      "sha256": "e827036ded894fc0734f7f4502462297c304f1fb3f163f611a60daee63a66b9f",
+      "source": "Windows 2.4 联合发行 language/zaizai_adapter/lexicon.py"
+    },
+    "releases/joint25/language/zaizai_adapter/native_bridge.py": {
+      "sha256": "aa2270774c205c0b8997d5da9a8bda8fb5b407f9537780f2962bc45728be579f",
+      "source": "Windows 2.4 联合发行 language/zaizai_adapter/native_bridge.py"
+    },
+    "releases/joint25/language/zaizai_adapter/schema.py": {
+      "sha256": "86b919c337bff0aca2565069b3338c4177b5a9acb4837d4cda7a572469fc4489",
+      "source": "Windows 2.4 联合发行 language/zaizai_adapter/schema.py"
+    },
+    "releases/joint25/language/zaizai_adapter/stage_a.py": {
+      "sha256": "e55c1c40a4cb3c3a6bc654ef72353771c992b77aad4ddf95a5eb281618814053",
+      "source": "Windows 2.4 联合发行 language/zaizai_adapter/stage_a.py"
+    },
+    "releases/joint25/language/zaizai_adapter/stage_b.py": {
+      "sha256": "05262bbbf024a6e9314b00c251cd86ce33adc0b01564e66d4f3b10709fe1baba",
+      "source": "Windows 2.4 联合发行 language/zaizai_adapter/stage_b.py"
+    },
+    "releases/joint25/language/zaizai_adapter/stage_c.py": {
+      "sha256": "84fe515f409bdb3b8f68bed73f6ccc6b3499abbec4ed34df6cf7e33865d57b9d",
+      "source": "Windows 2.4 联合发行 language/zaizai_adapter/stage_c.py"
+    },
+    "releases/joint25/language/zaizai_adapter/stage_d.py": {
+      "sha256": "a7b62df67d76aa62735f2b6d9ff014b8f1c16078d7b41f832fc64de460d32c21",
+      "source": "Windows 2.4 联合发行 language/zaizai_adapter/stage_d.py"
+    },
+    "releases/joint25/owner-report/export_delegation25.py": {
+      "sha256": "6b1f8036d11f986912286b7946a656e0023080b84e96bd0a4d60378560d1988e",
+      "source": "Windows 2.4 联合发行 owner-report/export_delegation25.py"
+    },
+    "releases/joint25/tools/joint25_gateway.py": {
+      "sha256": "1b9f4e891066162996ae2fb80c153b5aa5633734b62000c81eb56088eaff962c",
+      "source": "Windows 2.4 联合发行 tools/joint25_gateway.py"
+    },
+    "releases/joint25/tools/joint25_handoff.py": {
+      "sha256": "59d6ddec25779537e2ee030274d3f3d15079bf3e8826d5fbf8954c04a85c594e",
+      "source": "Windows 2.4 联合发行 tools/joint25_handoff.py"
+    },
+    "tools/adapt_window.py": {
+      "sha256": "f43cae1614ba9e2df8d1eb1293ae6a6de1968b28c68d3a51fd3b2bb67bc4e223",
+      "source": "Windows 2.4 正式发行 tools/adapt_window.py"
+    },
+    "tools/build.py": {
+      "sha256": "6065d682a5a7be47b3ee64ddf6acf4e48621e5ebe3333e0138024b433d3a70a6",
+      "source": "Windows 2.4 正式发行 tools/build.py"
+    },
+    "tools/check_compute.py": {
+      "sha256": "da8a154ea66c991bf89e70076f801a7e0464c5a71f2a84b39d839948609a78d5",
+      "source": "Windows 2.4 正式发行 tools/check_compute.py"
+    },
+    "tools/check_continuity.py": {
+      "sha256": "ff72a8c2e8340deb483fdf1beae9d162771aaafa00c4e9d8cafb66067761be6e",
+      "source": "Windows 2.4 正式发行 tools/check_continuity.py"
+    },
+    "tools/check_crash.py": {
+      "sha256": "5eaa3fcdaf8a00561e083a76934d495f422dec5611e079f120582ada1ace7b26",
+      "source": "Windows 2.4 正式发行 tools/check_crash.py"
+    },
+    "tools/check_decisions.py": {
+      "sha256": "43a82af92d991ae0635f5dbc88de72c3f87df275d070ccbb37b2cd9ac84f7bc4",
+      "source": "Windows 2.4 正式发行 tools/check_decisions.py"
+    },
+    "tools/check_evolution3.py": {
+      "sha256": "8e8708bd10db7e20d91e498bd5d4e819e33a5d34d2be088ec9571285c96907ff",
+      "source": "Windows 2.4 正式发行 tools/check_evolution3.py"
+    },
+    "tools/check_flow3.py": {
+      "sha256": "14c4dd66aeb8ae8d037aaff72fda218a14b6f8c5ecd345aa08151bba0e5a654e",
+      "source": "Windows 2.4 正式发行 tools/check_flow3.py"
+    },
+    "tools/check_fresh_import.py": {
+      "sha256": "2c3de6e8f9ae2532f99b1972bf9f8bb074cc4de06a096bb91f5f748ec70c2f25",
+      "source": "Windows 2.4 正式发行 tools/check_fresh_import.py"
+    },
+    "tools/check_gpu_guard.py": {
+      "sha256": "c762abc80f8e990ecce9fc560c1ecb1c1c8b55bd036767167dea2077368b5f0c",
+      "source": "Windows 2.4 正式发行 tools/check_gpu_guard.py"
+    },
+    "tools/check_host_field31.py": {
+      "sha256": "7244698de044e6682b7a50d5556ff227853d0335806f82c3e1fca3b867043039",
+      "source": "Windows 2.4 正式发行 tools/check_host_field31.py"
+    },
+    "tools/check_host_slots31.py": {
+      "sha256": "e9bbc8633a3f5a6508c8efb8fa87b833650d86753558518f7cd810a75c757e3f",
+      "source": "Windows 2.4 正式发行 tools/check_host_slots31.py"
+    },
+    "tools/check_inner3.py": {
+      "sha256": "12ca447f73c1498a93431cdb21b8b90cc6577efc39e86feff4abb3267c9e49ec",
+      "source": "Windows 2.4 正式发行 tools/check_inner3.py"
+    },
+    "tools/check_inquiry3.py": {
+      "sha256": "68cddddec47da8259fc16b2df8a6a5665dfdd79eed89e7752c6a1e0e5e7b8952",
+      "source": "Windows 2.4 正式发行 tools/check_inquiry3.py"
+    },
+    "tools/check_learning.py": {
+      "sha256": "3e811cbf1be2c0a4ea41990a2527e2805a9a5b69ad3118305e2dee9ba1179b80",
+      "source": "Windows 2.4 正式发行 tools/check_learning.py"
+    },
+    "tools/check_life_boundaries31.py": {
+      "sha256": "e0ed9e63d2b1456313ca761195728de7a322ed4166a920ab3e521c4cf78644fa",
+      "source": "Windows 2.4 正式发行 tools/check_life_boundaries31.py"
+    },
+    "tools/check_life_slots31.py": {
+      "sha256": "f45ca903be957d5a362818176706933ab8fe6bb96b58d06f44b8fe0f98f24de7",
+      "source": "Windows 2.4 正式发行 tools/check_life_slots31.py"
+    },
+    "tools/check_native.py": {
+      "sha256": "02b040152879c95753af2b0bba66834d1bab856f632b6fa88c66ecae9c8134ea",
+      "source": "Windows 2.4 正式发行 tools/check_native.py"
+    },
+    "tools/check_policy_edges.cpp": {
+      "sha256": "3548a6082ceaaecf5793fcdb6a8e7ac5ac469ad3ba6aa1412f45e91cdc27d1f9",
+      "source": "Windows 2.4 正式发行 tools/check_policy_edges.cpp"
+    },
+    "tools/check_policy_edges.py": {
+      "sha256": "9a95092c6cd63ad2620768bd366af9e778fe652bee022c16531ed9dad0248959",
+      "source": "Windows 2.4 正式发行 tools/check_policy_edges.py"
+    },
+    "tools/check_proof.py": {
+      "sha256": "58a7668ee09f979abd794b8ac67b28a24f4cdb85adbd3ae4aad6358f4736d60d",
+      "source": "Windows 2.4 正式发行 tools/check_proof.py"
+    },
+    "tools/check_rollback_slot_host31.py": {
+      "sha256": "06f9aeefebf6a58e0a57c4358a90b966db9a976fb05e034542974c53c5841b52",
+      "source": "Windows 2.4 正式发行 tools/check_rollback_slot_host31.py"
+    },
+    "tools/check_slot_ownership31.py": {
+      "sha256": "1f10034b279b2bb871542fefe51827ed67b921cb8bcfc7e3bf00e02f2674c606",
+      "source": "Windows 2.4 正式发行 tools/check_slot_ownership31.py"
+    },
+    "tools/check_slot_swap31.py": {
+      "sha256": "a95b394af669304c5f9a6c169a020626031da26cb81338dea591fe92affa332b",
+      "source": "Windows 2.4 正式发行 tools/check_slot_swap31.py"
+    },
+    "tools/check_slots31.py": {
+      "sha256": "36609b57b83281b1d9ec0b9a097fd3004087f23dab906aae4383e4e1fb130d99",
+      "source": "Windows 2.4 正式发行 tools/check_slots31.py"
+    },
+    "tools/check_study3.py": {
+      "sha256": "ae5998efef83154f2f433496361ccdfe8435f3304c7665c1d1b8c4ba2638df13",
+      "source": "Windows 2.4 正式发行 tools/check_study3.py；公开版适配"
+    },
+    "tools/cold_read.py": {
+      "sha256": "dc1a3d52145924444e422ce1b4b019ad2e27cc757b3a51db2e928b430b83ea95",
+      "source": "Windows 2.4 正式发行 tools/cold_read.py"
+    },
+    "tools/desktop_protocol.py": {
+      "sha256": "42786125f1c0c2b80ce7a379ac15b465a99af43ed303a7a572a83d540249932d",
+      "source": "Windows 2.4 正式发行 tools/desktop_protocol.py"
+    },
+    "tools/features.py": {
+      "sha256": "a74f9386eea4a00adb84ffefe8bad02346f5e6c1536990ceb6ddb404bb613bcd",
+      "source": "Windows 2.4 正式发行 tools/features.py"
+    },
+    "tools/final_port.py": {
+      "sha256": "071668730d461f3f32394b0862a6f10337fac98dfd4ae424509d84f08dd65143",
+      "source": "Windows 2.4 正式发行 tools/final_port.py"
+    },
+    "tools/gate_local3.py": {
+      "sha256": "64a4f7464433bd80a446783fcd810c3710d2a059a963220624af217f140d86b8",
+      "source": "Windows 2.4 正式发行 tools/gate_local3.py"
+    },
+    "tools/gate_slots_release31.py": {
+      "sha256": "45ef58042357155dc254f8d83f90e71757f1bc312c994ed18f5dc22c51423f0d",
+      "source": "Windows 2.4 正式发行 tools/gate_slots_release31.py"
+    },
+    "tools/geometry.cl": {
+      "sha256": "b0f9ee140a90501461003427250c6723544fb7c2503e98234c871c8fb84c818a",
+      "source": "Windows 2.4 正式发行 tools/geometry.cl"
+    },
+    "tools/geometry31-protocol.json": {
+      "sha256": "f59263c63ccf31ecc9337e99a6a08c662bd7bf72c58e4ade947092720011f360",
+      "source": "Windows 2.4 正式发行 tools/geometry31-protocol.json"
+    },
+    "tools/geometry31.py": {
+      "sha256": "dccaef9bb87799970dcff87f58476df4c4270f08b13024b655885f080a98535a",
+      "source": "Windows 2.4 正式发行 tools/geometry31.py"
+    },
+    "tools/import_curriculum3.py": {
+      "sha256": "19c481d65f3816983d1275cc02eb3fa1166516dea3010cd24e226e99d91430bd",
+      "source": "Windows 2.4 正式发行 tools/import_curriculum3.py"
+    },
+    "tools/intake_bridge3.py": {
+      "sha256": "aa7401a6e9e2adade0a9ca2dec3fd8152493ce84d716f8d8381afd7bf0202958",
+      "source": "Windows 2.4 正式发行 tools/intake_bridge3.py"
+    },
+    "tools/joint25_gateway.py": {
+      "sha256": "1b9f4e891066162996ae2fb80c153b5aa5633734b62000c81eb56088eaff962c",
+      "source": "Windows 2.4 正式发行 tools/joint25_gateway.py"
+    },
+    "tools/joint25_handoff.py": {
+      "sha256": "59d6ddec25779537e2ee030274d3f3d15079bf3e8826d5fbf8954c04a85c594e",
+      "source": "Windows 2.4 正式发行 tools/joint25_handoff.py"
+    },
+    "tools/launcher.cpp": {
+      "sha256": "c11934ce7aafba4afb9e1c63c125dbb7ce566c49480513a0eec99a8b5e14f04a",
+      "source": "Windows 2.4 正式发行 tools/launcher.cpp"
+    },
+    "tools/legacy_decode_tail.txt": {
+      "sha256": "5d7fa401b7e30a28a8de6240ad323a35894d196aeb4fba80f572f9af457e5018",
+      "source": "Windows 2.4 正式发行 tools/legacy_decode_tail.txt"
+    },
+    "tools/manage_candidate_lexicon25.py": {
+      "sha256": "f2c21aeddcaf2f215521b88c09eac337b286e87a285a579088125c806b688863",
+      "source": "Windows 2.4 正式发行 tools/manage_candidate_lexicon25.py"
+    },
+    "tools/manage_joint25.py": {
+      "sha256": "8b40ec76c43f0cb4f250853f16a58e49700af0d0ce5a627086110e1ba3e19827",
+      "source": "Windows 2.4 正式发行 tools/manage_joint25.py"
+    },
+    "tools/manage_slots31.py": {
+      "sha256": "8dfd3b1b9a14a7f8f187f4f3666c567c881ed053013e8957c5450395e6ce007a",
+      "source": "Windows 2.4 正式发行 tools/manage_slots31.py"
+    },
+    "tools/migrate.py": {
+      "sha256": "62b64c4e24ebd0e82dab64b67f45d9dc43a30ea581f3a64a30647364e5ced038",
+      "source": "Windows 2.4 正式发行 tools/migrate.py；公开版适配"
+    },
+    "tools/port_sources.py": {
+      "sha256": "515b7ff27ff32dceeb21d7a67f182f48a72a878e3966971930b38c824f7210b1",
+      "source": "Windows 2.4 正式发行 tools/port_sources.py"
+    },
+    "tools/rebuild-source.py": {
+      "sha256": "2c65b09278753cb97535e1e9e06ce8c8ec04ce7de50ef3626ec4f1b91e97b527",
+      "source": "Windows 2.4 正式发行 tools/rebuild-source.py"
+    },
+    "tools/rollback_geometry31.py": {
+      "sha256": "081b36204c61781a6e5ab908df88600d4e2f1e13a616fd65537cc450c039c6b6",
+      "source": "Windows 2.4 正式发行 tools/rollback_geometry31.py"
+    },
+    "tools/rollback_local3.py": {
+      "sha256": "e2605e08dbc8265a7ae81eaa14a7619980f00c01659367bef96c2431d2c5dc39",
+      "source": "Windows 2.4 正式发行 tools/rollback_local3.py"
+    },
+    "tools/rollback_slot_host31.py": {
+      "sha256": "9660bc6f6afc374614e852a6061b6950fc9404629ac07418d6e454be3d29cda6",
+      "source": "Windows 2.4 正式发行 tools/rollback_slot_host31.py"
+    },
+    "tools/save_state.py": {
+      "sha256": "6e8d27a7f6bca45867f1a6238c358eca6c88b176a189943a6fa24897f812d72b",
+      "source": "Windows 2.4 正式发行 tools/save_state.py"
+    },
+    "tools/Set-Entry.ps1": {
+      "sha256": "75e005ec6aeb6c361765e5939fc06ff7c32dc0363413efd9ea0d0635549bffb5",
+      "source": "Windows 2.4 正式发行 tools/Set-Entry.ps1；公开版适配"
+    },
+    "tools/update_build.py": {
+      "sha256": "4c63e835f76c37e750f5af0e8382fb91f344a1f770211dc468d6cb2f9fd247a6",
+      "source": "Windows 2.4 正式发行 tools/update_build.py"
+    },
+    "tools/upstream_checks.py": {
+      "sha256": "db522e780870735b67d8d79d44d36fe901337b809b4f72488b52c697958d9251",
+      "source": "Windows 2.4 正式发行 tools/upstream_checks.py"
+    },
+    "tools/utf8.manifest": {
+      "sha256": "c940428e21bc57403b75b96ac404a08266d8c9b31eafe633419c5bfd6c554e66",
+      "source": "Windows 2.4 正式发行 tools/utf8.manifest"
+    },
+    "tools/verify_curriculum_example3.py": {
+      "sha256": "bbaac4d45366df2fda4fc5a9149ddae6ccb3a346b1e44930ad3a906bb93d3972",
+      "source": "Windows 2.4 正式发行 tools/verify_curriculum_example3.py"
+    },
+    "tools/win_release.py": {
+      "sha256": "dc7b51dc27a92e06398317c44b164f818a2c5a0af11f1923aeee07d53b5fefa8",
+      "source": "Windows 2.4 正式发行 tools/win_release.py"
+    },
+    "tools/windows_sdk_probe.py": {
+      "sha256": "22cd57229d8506c010808f6d04d5f5ac38f4e73fab81ceb79dadba938db060bf",
+      "source": "Windows 2.4 正式发行 tools/windows_sdk_probe.py"
+    },
+    "tools/zaizai.py": {
+      "sha256": "2366e7d85002bf57a81b8d1e5a6179c9250b64b3fc958db9ed9ca27a0b4ecb2b",
+      "source": "Windows 2.4 正式发行 tools/zaizai.py"
+    }
+  }
+}

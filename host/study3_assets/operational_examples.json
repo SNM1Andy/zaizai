@@ -1,0 +1,184 @@
+{
+  "C-01": {
+    "term": "有明确可证伪条件的经验预测",
+    "prerequisites": [],
+    "training": [
+      {
+        "id": "example_a",
+        "context": "轨道预报",
+        "features": [
+          "empirical",
+          "exclusion",
+          "sample_a"
+        ],
+        "expected": "POSITIVE"
+      },
+      {
+        "id": "example_b",
+        "context": "气温预测",
+        "features": [
+          "empirical",
+          "exclusion",
+          "sample_b"
+        ],
+        "expected": "POSITIVE"
+      },
+      {
+        "id": "partial_a",
+        "context": "定理",
+        "features": [
+          "empirical"
+        ],
+        "expected": "UNKNOWN"
+      },
+      {
+        "id": "partial_b",
+        "context": "趋势描述",
+        "features": [
+          "exclusion"
+        ],
+        "expected": "UNKNOWN"
+      },
+      {
+        "id": "contrary_a",
+        "context": "事后解释",
+        "features": [
+          "fits_all",
+          "sample_a"
+        ],
+        "expected": "NEGATIVE"
+      },
+      {
+        "id": "contrary_b",
+        "context": "附会理论",
+        "features": [
+          "fits_all",
+          "sample_b"
+        ],
+        "expected": "NEGATIVE"
+      }
+    ]
+  },
+  "C-10": {
+    "term": "有已验证回退路径的变更",
+    "prerequisites": [],
+    "training": [
+      {
+        "id": "example_a",
+        "context": "索引迁移",
+        "features": [
+          "backup",
+          "restore_checked",
+          "sample_a"
+        ],
+        "expected": "POSITIVE"
+      },
+      {
+        "id": "example_b",
+        "context": "图册归档",
+        "features": [
+          "backup",
+          "restore_checked",
+          "sample_b"
+        ],
+        "expected": "POSITIVE"
+      },
+      {
+        "id": "partial_a",
+        "context": "空目录",
+        "features": [
+          "backup"
+        ],
+        "expected": "UNKNOWN"
+      },
+      {
+        "id": "partial_b",
+        "context": "旧副本",
+        "features": [
+          "restore_checked"
+        ],
+        "expected": "UNKNOWN"
+      },
+      {
+        "id": "contrary_a",
+        "context": "原件销毁",
+        "features": [
+          "rollback_impossible",
+          "sample_a"
+        ],
+        "expected": "NEGATIVE"
+      },
+      {
+        "id": "contrary_b",
+        "context": "单向封存",
+        "features": [
+          "rollback_impossible",
+          "sample_b"
+        ],
+        "expected": "NEGATIVE"
+      }
+    ]
+  },
+  "C-11": {
+    "term": "有时点且可复查的直接行为观察",
+    "prerequisites": [
+      "C-01"
+    ],
+    "training": [
+      {
+        "id": "example_a",
+        "context": "会议记录",
+        "features": [
+          "direct_record",
+          "time_given",
+          "sample_a"
+        ],
+        "expected": "POSITIVE"
+      },
+      {
+        "id": "example_b",
+        "context": "门禁计时",
+        "features": [
+          "direct_record",
+          "time_given",
+          "sample_b"
+        ],
+        "expected": "POSITIVE"
+      },
+      {
+        "id": "partial_a",
+        "context": "回忆猜想",
+        "features": [
+          "direct_record"
+        ],
+        "expected": "UNKNOWN"
+      },
+      {
+        "id": "partial_b",
+        "context": "未注时观察",
+        "features": [
+          "time_given"
+        ],
+        "expected": "UNKNOWN"
+      },
+      {
+        "id": "contrary_a",
+        "context": "臆测想法",
+        "features": [
+          "only_motive_guess",
+          "sample_a"
+        ],
+        "expected": "NEGATIVE"
+      },
+      {
+        "id": "contrary_b",
+        "context": "推测意图",
+        "features": [
+          "only_motive_guess",
+          "sample_b"
+        ],
+        "expected": "NEGATIVE"
+      }
+    ]
+  }
+}

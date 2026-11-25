@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "correction_retraction_v1",
+  "title": "更正或撤回。追加记录，不覆盖历史。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "event_id",
+    "kind",
+    "subject_source_version_id",
+    "new_source_version_id",
+    "detected_at",
+    "affected_proposition_ids",
+    "keeps_independent_observations",
+    "replay_writes",
+    "history_overwritten",
+    "reason"
+  ],
+  "properties": {
+    "schema": {
+      "const": "correction_retraction_v1"
+    },
+    "event_id": {
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "correction",
+        "retraction",
+        "deletion",
+        "unavailable",
+        "recheck"
+      ]
+    },
+    "subject_source_version_id": {
+      "type": "string"
+    },
+    "new_source_version_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "detected_at": {
+      "type": "string"
+    },
+    "affected_proposition_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "keeps_independent_observations": {
+      "const": true
+    },
+    "replay_writes": {
+      "const": false
+    },
+    "history_overwritten": {
+      "const": false
+    },
+    "reason": {
+      "type": "string"
+    }
+  }
+}

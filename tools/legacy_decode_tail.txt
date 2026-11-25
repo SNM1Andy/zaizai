@@ -1,0 +1,16 @@
+import sqlite3
+import world_link
+import cold
+base.enable_numeric(pins)
+closed=json.loads((native/"acceptance/closed.json").read_bytes())
+assert all(base.sha(native/k)==v for k,v in closed.items())
+_,response,_,_=cold.transcript("06-confirm")
+with sqlite3.connect((native/"run/m5-original.sqlite").as_uri()+"?mode=ro",uri=True) as db:
+    saved,=db.execute("select response from r22_receipt").fetchone()
+    assert json.loads(saved)==response
+    phases=[r[0] for r in db.execute("select state from r22_history order by seq")]
+assert phases==["PLANNED","RESERVED","COMPLETED"]
+world=world_link.cold_world(plan,pin,response)
+anchor=json.loads((ROOT/"state/native/joint-reopen.json").read_bytes())
+assert plan["identity"]==anchor["identity"] and response["receipt_ref"]==anchor["receipt"]
+print(json.dumps(dict(identity=plan["identity"],generation=world["generation"],tick=world["core_tick"],receipt=response["receipt_ref"],process=os.getpid(),m5_states=phases,world=world),ensure_ascii=True))

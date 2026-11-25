@@ -1,0 +1,11 @@
+{
+  "source_archive": "CL-Core-Lexicon-500.zip",
+  "sha256": "b66076fac44c7bacc1077244c93afd3611c5444e7162bcd86753cf73def6cc9a",
+  "authoring_line": "DeepSeek CL historical technical glossary",
+  "source_target": "CL 0.157",
+  "windows_asset_sha256": "d45f3691d7ce5ac898fc3e425e85af802ee29a35997000b5998da4619377a618",
+  "records": 500,
+  "example_assertions": 1003,
+  "fixtures": 526,
+  "independently_human_approved": 0
+}

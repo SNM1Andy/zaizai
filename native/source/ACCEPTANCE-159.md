@@ -1,0 +1,5 @@
+# Combined native Linux kit, with independent CL and PCGM identity
+
+Deliver an actual ready-to-unpack Linux x86-64 CPU tar tied to the exact native source suite. Keep CL compiler release 0.157 separate from PCGM release 0.159; PCGM reports its own state-free capabilities and exact binary digest, and the runtime manifest records both versions. Include CL prepared immutable workspace and PCGM audited observation command in offline documentation and installed examples. Rebuild deterministic tar twice and validate from the actual relocated archive using shipped SDK and binaries, respecting no production data or state writes outside a disposable workspace.
+
+Prove actual installed CL repeated/proof-prepared C host parity (reconstitute archives and erase their source), and native PCGM audit the original before/after proof after later conflicting evidence, handoff and abrupt restart in a new directory. Verify runtime digest, manifest, exact file set/modes, bundled and detached SDK versions, program identity/hash, and distinct Linux CPU scope. No Window/CUDA or actual deployment claim.

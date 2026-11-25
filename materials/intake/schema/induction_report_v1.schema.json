@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "induction_report_v1",
+  "title": "归纳报告。CL 未运行时状态是 NOT_RUN，不是 UNKNOWN。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "report_id",
+    "question_id",
+    "established",
+    "contested_or_unscoped",
+    "inferences",
+    "unknown",
+    "next_evidence",
+    "cl_status",
+    "pcgm_attached",
+    "admit_called",
+    "formal_write",
+    "not_belief"
+  ],
+  "properties": {
+    "schema": {
+      "const": "induction_report_v1"
+    },
+    "report_id": {
+      "type": "string"
+    },
+    "question_id": {
+      "type": "string"
+    },
+    "established": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "contested_or_unscoped": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "inferences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "basis"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "basis": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "unknown": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cl_status": {
+      "const": "NOT_RUN"
+    },
+    "pcgm_attached": {
+      "const": false
+    },
+    "admit_called": {
+      "const": false
+    },
+    "formal_write": {
+      "const": false
+    },
+    "not_belief": {
+      "const": true
+    }
+  }
+}

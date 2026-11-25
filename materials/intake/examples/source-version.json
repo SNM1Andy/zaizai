@@ -1,0 +1,20 @@
+{
+  "schema": "source_version_v1",
+  "source_version_id": "srcver-gazette-100-copy-b",
+  "evidence_family_id": "fam:gazette-2024-enrollment",
+  "url": "https://example.invalid/reprint/b",
+  "author_public": "澄湾转载号",
+  "author_verifiable": false,
+  "published_at": "2024-12-31T09:00:00Z",
+  "fetched_at": "2026-11-23T00:00:00Z",
+  "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "version_seq": 1,
+  "prior_version_id": null,
+  "summary": "转载澄湾公报的报名人数通稿。与首发同一证据族，不另算一个独立来源。",
+  "origin_role": "syndication",
+  "robots": "allowed",
+  "fetch_status": "fetched",
+  "citation_chain": [
+    "fam:gazette-2024-enrollment"
+  ]
+}

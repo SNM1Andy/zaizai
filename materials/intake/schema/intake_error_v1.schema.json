@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "intake_error_v1",
+  "title": "捕捞错误。不扩大权限。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "error_id",
+    "code",
+    "task_id",
+    "action",
+    "privilege_change",
+    "bypass",
+    "detail"
+  ],
+  "properties": {
+    "schema": {
+      "const": "intake_error_v1"
+    },
+    "error_id": {
+      "type": "string"
+    },
+    "code": {
+      "enum": [
+        "unread_source",
+        "budget_exhausted",
+        "risk_unclassified",
+        "summary_unreliable",
+        "robots_denied",
+        "bypass_refused",
+        "injection_blocked",
+        "privilege_refused",
+        "schema_invalid",
+        "pin_mismatch",
+        "age_unresolved_sexual",
+        "nonconsensual_blocked",
+        "collection_paused"
+      ]
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "action": {
+      "enum": [
+        "pause_task",
+        "degrade_to_lead",
+        "quarantine",
+        "reject"
+      ]
+    },
+    "privilege_change": {
+      "const": false
+    },
+    "bypass": {
+      "const": false
+    },
+    "detail": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+CL-API-1
+econ::budget input (qty(cny_cent))
+econ::cost input (sym,qty(cny_cent))
+econ::dominates output (sym,sym)
+econ::feasible output (sym)
+econ::output input (sym,qty(items))
+econ::verified input (sym)

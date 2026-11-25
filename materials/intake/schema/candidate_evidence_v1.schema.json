@@ -1,0 +1,330 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "candidate_evidence_v1",
+  "title": "候选证据。不是信念，也不是 CL 源码。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "candidate_id",
+    "question_id",
+    "proposition",
+    "evidence_family_id",
+    "source_version_id",
+    "locator",
+    "risk",
+    "uncertainty",
+    "retraction",
+    "cl_safe",
+    "belief_status",
+    "formal_write",
+    "body_policy"
+  ],
+  "properties": {
+    "schema": {
+      "const": "candidate_evidence_v1"
+    },
+    "candidate_id": {
+      "type": "string"
+    },
+    "question_id": {
+      "type": "string"
+    },
+    "proposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "proposition_id",
+        "text",
+        "language",
+        "speech_act",
+        "polarity",
+        "scope",
+        "normalized_claim_key"
+      ],
+      "properties": {
+        "proposition_id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "speech_act": {
+          "enum": [
+            "verifiable",
+            "opinion",
+            "unverified_allegation",
+            "inference",
+            "irony",
+            "topic_description",
+            "page_instruction"
+          ]
+        },
+        "polarity": {
+          "enum": [
+            "support",
+            "oppose",
+            "background"
+          ]
+        },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subject",
+            "time_start",
+            "time_end",
+            "population",
+            "geography",
+            "conditions"
+          ],
+          "properties": {
+            "subject": {
+              "type": "string"
+            },
+            "time_start": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "time_end": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "population": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "geography": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "conditions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "normalized_claim_key": {
+          "type": "string"
+        }
+      }
+    },
+    "evidence_family_id": {
+      "type": "string"
+    },
+    "source_version_id": {
+      "type": "string"
+    },
+    "locator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recheckable",
+        "unrecheckable_reason",
+        "quote_sha256",
+        "url"
+      ],
+      "properties": {
+        "recheckable": {
+          "type": "boolean"
+        },
+        "unrecheckable_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "quote_sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "labels",
+        "disposition",
+        "reason",
+        "adult_sexual_scope"
+      ],
+      "properties": {
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "disposition": {
+          "enum": [
+            "analyze_ok",
+            "background_only",
+            "hold_review",
+            "do_not_collect"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "adult_sexual_scope": {
+          "enum": [
+            "not_sexual",
+            "sexual_topic_not_depiction",
+            "adult_consensual_text",
+            "adult_media_not_fetched",
+            "adult_consent_unclassified",
+            "age_unknown_sexual",
+            "minor_or_under21",
+            "nonconsensual_intimate"
+          ]
+        }
+      }
+    },
+    "uncertainty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "notes",
+        "one_sided",
+        "independence"
+      ],
+      "properties": {
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "one_sided": {
+          "type": "boolean"
+        },
+        "independence": {
+          "enum": [
+            "independent",
+            "same_family",
+            "unknown",
+            "lead_only"
+          ]
+        }
+      }
+    },
+    "retraction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relation",
+        "target_id"
+      ],
+      "properties": {
+        "relation": {
+          "enum": [
+            "none",
+            "corrects",
+            "retracts",
+            "retracted_by",
+            "corrected_by"
+          ]
+        },
+        "target_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "cl_safe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expressible",
+        "executable_claim",
+        "cl_status",
+        "inspected_cl_command",
+        "taskbook_cl_command",
+        "inspected_pcgm_command",
+        "taskbook_pcgm_command",
+        "admit_called",
+        "state",
+        "gaps",
+        "sidecar_only"
+      ],
+      "properties": {
+        "expressible": {
+          "type": "boolean"
+        },
+        "executable_claim": {
+          "const": false
+        },
+        "cl_status": {
+          "const": "NOT_RUN"
+        },
+        "inspected_cl_command": {
+          "const": "evidence-frozen-verify"
+        },
+        "taskbook_cl_command": {
+          "const": "evidence-frozen-integrity"
+        },
+        "inspected_pcgm_command": {
+          "const": "--frozen-question-review"
+        },
+        "taskbook_pcgm_command": {
+          "const": "--frozen-question-integrity"
+        },
+        "admit_called": {
+          "const": false
+        },
+        "state": {
+          "const": "STATE_NOT_ATTACHED"
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sidecar_only": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "belief_status": {
+      "const": "candidate_only"
+    },
+    "formal_write": {
+      "const": false
+    },
+    "body_policy": {
+      "enum": [
+        "retain",
+        "locator_only",
+        "audit_only_no_body",
+        "instruction_untrusted",
+        "lead_only",
+        "nongraphic_background"
+      ]
+    }
+  }
+}

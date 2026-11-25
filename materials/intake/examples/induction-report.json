@@ -1,0 +1,26 @@
+{
+  "schema": "induction_report_v1",
+  "report_id": "report-enrollment-001",
+  "question_id": "q-chengwan-enrollment-2024",
+  "established": [],
+  "contested_or_unscoped": [
+    "同一截止日、同一成人夜校范围：公报更正说 80，图书馆独立计数说 100。这是冲突候选，不是两个都成立，也还不是信念。"
+  ],
+  "inferences": [
+    {
+      "text": "另外两家转载不增加独立来源。",
+      "basis": "它们的 origin_work_id 与公报首发相同，证据族只有一个。"
+    }
+  ],
+  "unknown": [
+    "截至 2024-12-31 的报名人数现在不能判断。撤回只让公报旧稿失效，不把图书馆的观察改成否定。"
+  ],
+  "next_evidence": [
+    "报名底册或另一份不引用该公报的原始计数。"
+  ],
+  "cl_status": "NOT_RUN",
+  "pcgm_attached": false,
+  "admit_called": false,
+  "formal_write": false,
+  "not_belief": true
+}

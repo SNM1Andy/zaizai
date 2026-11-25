@@ -1,0 +1,8 @@
+prefix=${pcfiledir}/../..
+libdir=${prefix}/lib
+includedir=${prefix}/include
+Name: CL Memory
+Description: Native CL compiler and evidence transitions on caller-owned buffers
+Version: 0.157
+Libs: -L${libdir} -lcl_memory
+Cflags: -I${includedir}

@@ -1,0 +1,8 @@
+prefix=${pcfiledir}/../..
+libdir=${prefix}/lib
+includedir=${prefix}/include
+Name: CL Runtime
+Description: Independent native CL compiler and proof runtime
+Version: 0.157
+Libs: -L${libdir} -lcl_runtime
+Cflags: -I${includedir}

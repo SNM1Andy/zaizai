@@ -1,0 +1,15 @@
+{
+  "kind": "R12 preregistered paired deterministic TEST fixture",
+  "slots": {"amber": false, "teal": true},
+  "identity": "A single fresh TEST-R12 identity per experiment, shared only across its isolated counterfactual worlds. Journals never shared.",
+  "world": {"count": 3, "local": false, "positions": {"object_0000": [1,0], "object_0001": [2,0], "object_0002": [0,0]}},
+  "assignment": "The only assigned difference is World(hazard=False/True), which sets hidden object_0000 value to +1/-1 at birth. The three positions are a common permutation of the public grid, fixed before birth. No changes to the world, state, or evidence after birth.",
+  "reason_for_layout": "The first ID sits at the centroid. The two remaining never-observed IDs have identical novelty, switching and persistence. One shares the first ID's native spatial sign bin, one does not.",
+  "field_seed": 3,
+  "calibration": "Exact geometry, independent seed 991, 64-step calibration, weights, beta and runtime defaults of integrated_console.create_reference. Every module switch uses its birth value.",
+  "query": {"source": "EMIT(CALL(module=\"associate_entity\",entity=@object_0000));", "entity": "object_0000", "policy_entry": "IntegratedLife.step at READY, ordinary next-observation decision"},
+  "endpoint": "Check matched tick 0 public perception, eligibility and first actual commit. At tick 2 compare identical public action bundle, both jobs eligible, fixed CL + semantic query and complete M4 arbitration, rank basis, selected request and receipt. Also verify that cold startup and query do not step, the warm and cold decisions both really execute and complete at tick 4. Equal selections and inconclusive attribution are valid outcomes.",
+  "mechanism": "Compare candidate score margins after removing the original audited experience term arithmetically, without changing runtime settings, evidence, scores or thresholds. Check other component margins, including field offset; cross-world score constants are allowed. Attribute specifically to spatial experience only if differential margins support it.",
+  "chronology": "At READY tick 2, fork joint.json plus actions.json byte-for-byte to a sibling disposable warm sandbox in the writer process. Original stays at tick 2. Both writers exit before fresh interpreters open original directories in place. Archive closed bytes and compare warm/cold tick 3 commit and tick 4 settled bytes.",
+  "attempts": "One experiment, no automatic rerun. All outputs exclusive per run. No host/Broker/model actions; synthetic World.observe only. This tests this fixture only."
+}

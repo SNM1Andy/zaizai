@@ -1,0 +1,5 @@
+# Prepared CL workspace: repeated offline proof without re-linking or re-evaluating
+
+Add a pure C ABI for opening a pinned immutable workspace image/lock, independently reconstructing its link and attaining a complete bounded proof table once. The handle owns its program and proof table and is unaffected by caller buffer reuse, filesystem, or separate generations. Subsequent query batches validate typed goals and render byte-identical ordinary proof receipts concurrently; no shared mutable query state, extra signature, or PCGM authority. On preparation failure no handle exists. Explicit close is caller-owned and may not race queries. A host cannot turn incomplete inference into a successful prepared handle.
+
+Run a real detached C host with several concurrent query buffers, read exact one-shot/CLI output and test incoming buffers can be released. Demonstrate independently pinned generations so a mix-up cannot serve old results as new, proof matches and malformed typed/pin/budget requests fail. Include benchmark for repeated reads with median timing and exact archive size, without gating correctness on timing. Native Linux CPU only.

@@ -1,0 +1,19 @@
+{
+  "source": "Grok-source-provenance.zip",
+  "sha256": "bf6979661a641149995bd704047f9540026f51f2d495950edb19279fbd69d1c2",
+  "selected_ids": [
+    "real-a03",
+    "real-a04",
+    "real-c03",
+    "syn-a04",
+    "syn-a07",
+    "syn-a08",
+    "syn-b01",
+    "syn-b03",
+    "syn-c02",
+    "syn-c03",
+    "syn-c04",
+    "syn-c09"
+  ],
+  "scope": "3 historical public-source examples and 9 fictional regression examples; source-page contents are not redistributed."
+}

@@ -1,0 +1,2111 @@
+diff --git a/cl-native.hpp b/cl-native.hpp
+index 151d1157886654d9ac08cc6a7a2a356e7733c41e..5066837d718544e02d1733834cc64e4b79874e62 100644
+--- a/cl-native.hpp
++++ b/cl-native.hpp
+@@ -8,6 +8,8 @@ namespace cl_native {
+ struct EvaluationLimit : std::runtime_error {using std::runtime_error::runtime_error;};
+ struct EvaluationCeilings {std::size_t rounds, facts, probes, indexed;};
+ enum class EvidenceSign {Positive,Negative,Conflict,Unknown};
++// Compile a bounded in-memory CL slice and prove its declared goals in CL order.
++std::vector<std::string> checked_repair_statuses(const std::string& source);
+ struct SingleGoalProof {EvidenceSign sign;std::string receipt;};
+ std::string verify_frozen_integrity(const std::string& raw,const std::string& trusted_artifact,
+                                     const std::string& trusted_package,const std::string& trusted_snapshot);
+diff --git a/cl-src/cl.cpp b/cl-src/cl.cpp
+index de047e576620d4c0e0958a9bbc770339c528bc35..3f70ede67841663bc4f6d303ce49f216064cc85d 100644
+--- a/cl-src/cl.cpp
++++ b/cl-src/cl.cpp
+@@ -528,6 +528,20 @@ void frontier(const Table& t){
+ #include "workspace-mixed-recipe.inc"
+ #include "workspace-source-recipe.inc"
+ #include "offline-receipt.inc"
++std::vector<std::string> checked_repair_statuses(const std::string& source){
++    require(source.size()<=65536,"repair proof source exceeds 64 KiB");
++    const auto program=compile(source);
++    require(!program.goals.empty()&&program.goals.size()<=32&&program.rules.size()<=128&&
++            program.observations.size()<=512,"repair proof slice exceeds native CL budget");
++    const auto table=run(program,{},nullptr,{64,4096,250000,250000});
++    vector<string> result;
++    for(const auto& goal:program.goals){
++        auto neg=goal;neg.pred="!"+goal.pred;
++        const bool pos=table.facts.contains(goal),minus=table.facts.contains(neg);
++        result.emplace_back(pos?(minus?"CONFLICT":"POSITIVE"):(minus?"NEGATIVE":"UNKNOWN"));
++    }
++    return result;
++}
+ #include "proof-integrity.inc"
+ #include "round-checkpoint.inc"
+ #ifndef CL_PORTABLE_MEMORY_CORE
+diff --git a/fixtures/agenda-discovery.cl b/fixtures/agenda-discovery.cl
+new file mode 100644
+index 0000000000000000000000000000000000000000..69e7fccadfd0dbd62b1d4777062c13fd311b0ab6
+--- /dev/null
++++ b/fixtures/agenda-discovery.cl
+@@ -0,0 +1,17 @@
++# Synthetic instrument, parcel and calibration cases. No declared goals.
++: reading(sym,i64).
++: checked(i64).
++: ready(i64).
++: arrival(sym).
++: inspected(sym).
++: released(sym).
++: calibration(sym).
++: allowed(sym).
++: measured(sym).
++: calibrated(sym).
++ready($n) <- reading(sensor,$n) & checked($n).
++!ready($n) <- !checked($n).
++released($x) <- arrival($x) & inspected($x).
++!released($x) <- !inspected($x).
++calibrated($x) <- calibration($x) & allowed($x) & measured($x).
++!calibrated($x) <- calibration($x) & allowed($x) & !measured($x).
+diff --git a/fixtures/agenda-independent.cl b/fixtures/agenda-independent.cl
+new file mode 100644
+index 0000000000000000000000000000000000000000..269046803c50ed7741e05daa06776c36f004454a
+--- /dev/null
++++ b/fixtures/agenda-independent.cl
+@@ -0,0 +1,3 @@
++module independent.
++export checked.
++: checked(i64).
+diff --git a/fixtures/outcome/README.md b/fixtures/outcome/README.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..5fddd36cf8d6bc8e39fe544e10abcfbb2d11620f
+--- /dev/null
++++ b/fixtures/outcome/README.md
+@@ -0,0 +1,31 @@
++# 核心线对话与来源夹具
++
++五个输入在 2026-11-25 本轮首次运行前冻结。上游语义、义项和来源关系由夹具作者给定。冻结原句为“青签这单说的‘放行’是哪种？”，JSONL 内保留原句的双引号，字节区间使用 UTF-8 左闭右开约定。两个候选分别询问该单进入仓储流程或款项流程。关系 `dock_context(blue)` 的正负证据能区分这两种解释。
++
++| 文件 | 来源与用途 |
++| --- | --- |
++| `routes.cl` | 冻结的 PCGM 模拟工单规则，初始目标集为空。 |
++| `provider.cl` | 独立 CL 生产者的声明。测试从其证据日志生成冻结答卷。 |
++| `dialogue-candidate.jsonl` | 模拟 Gemini 提供的一个有歧义的候选，含两个类型化目标及 UTF-8 字节位置。 |
++| `lexicon-senses.jsonl` | 模拟 DeepSeek 提供的两个候选义项。 |
++| `source-observations.jsonl` | 模拟 Grok 提供的三个来源记录。登记处和转载预先绑定同一观察 ID；仓储部门独立提供待核对的上下文。 |
++
++核心测试检查同一观察 ID 的转载重放，随后从活跃证据发起议程，经独立批准通道登记问题并接纳仓储答卷。之后加入反向观察，按 ID 撤回，核对同一票、观察状态和历史对话。真实来源家族核验与自然语言候选生成由对应任务线验收。
++
++## 结果读取
++
++`ID reasoned_outcome CASE GOAL [since PIN]` 是 `--read-channel` 的只读帧。CASE 是调用方传入的关联 ID。GOAL 是已声明关系的类型正确、无变量的正向原子，可在登记为目标前读取。指定 `since PIN` 时，必须已用 `:pin PIN` 在同一个体和同一历史中留存了可比较的基准。
++
++`:chat CASE TURN focus GOAL` 选定已登记的目标；`:chat CASE TURN outcome [since PIN]` 将同一结果保存为对话回执。结果里的 `state_revision` 引用写入这一轮对话之前的推理状态。相同请求与回合 ID 在重启后返回原回执。无焦点时，请求得到已有的 `clarify no_focus`。原生对话回执上限为 16 KiB，较大的结果由只读帧读取，结果上限为 2 MiB。
++
++| 字段 | 读法 |
++| --- | --- |
++| `source_id`、`baseline_version` | 个体身份、交接源码清单的 SHA-256。 |
++| `status`、`positive_proof`、`negative_proof` | 四值及两条分别重建的证据链，单支超过 128 个节点时保留原生截断标记。 |
++| `missing`、`missing_scan_complete` | 在原生缺口搜索中可寻址的正向前提。空列表需结合扫描完成标记与当前四值判断。 |
++| `question_ticket`、`questions` | 仅有一张匹配票时给出其 ID，零张或多张时为 null。列表保留该目标已有的全部票、请求摘要、答卷出处和活动状态。 |
++| `effect_receipt` | 指定基准时给出历史状态版本、作用目标、结论与证明变化、规则变化及观察引用，未指定基准时为 null。 |
++
++观察差异涵盖目标的依赖谓词范围。每项分别标明是否出现在新旧证明中。至多对八项变更逐项在当前规则下撤销一次、重新推理，结果在 `status_if_change_undone`。超过范围或反事实求值失败时此字段为 null。新旧观察在两个基准上都不活动时，净差异为空；中间的历史变化可使用更接近的基准查看。规则引用使用原生稳定身份，并给出完整规则文本、守卫和是否进入实际证明。所有比较均在内存内执行。
++
++运行 `python3 handoff-checks/reasoned-outcome-check.py ./pcgm-alpha ./cl`，也可指定 beta。标准输出逐行保留模拟工单、热替换与回退过程中的原生结果，标准错误输出测试结论。
+diff --git a/fixtures/outcome/SHA256SUMS b/fixtures/outcome/SHA256SUMS
+new file mode 100644
+index 0000000000000000000000000000000000000000..1ae6d92077e06e5bffc23e93b8daeb1213e7895b
+--- /dev/null
++++ b/fixtures/outcome/SHA256SUMS
+@@ -0,0 +1,5 @@
++2cd32f1b64ff135ac53eb53a3152fe4e1cf137c2afa2617daab6bd7942ee7cdf  dialogue-candidate.jsonl
++672fe1c22716cc5c25ea8859c259c2ebf6b62b1e844ddd911d9c7c7645802e2a  lexicon-senses.jsonl
++39f4a150d3632320d3d2a0c2a53fe57c1d50015b1ac7a661e3972167c630d89d  provider.cl
++e5a8d4deb289e4b8f17fd90ce8a80fee88c6bdafffe0241e5210bb21ef599c26  routes.cl
++e4e30b65f127a553624e4d36190e6aebe7063c32e6da49945d642e97d7ff0b47  source-observations.jsonl
+diff --git a/fixtures/outcome/dialogue-candidate.jsonl b/fixtures/outcome/dialogue-candidate.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..7b4b4568ddef947937325f1c70c0203f1c406c7f
+--- /dev/null
++++ b/fixtures/outcome/dialogue-candidate.jsonl
+@@ -0,0 +1 @@
++{"schema":"cl-dialogue-candidate-v1","case_id":"bluepass","baseline_version":"source-sha256:9e456752f08769fb3757c21665587c847ec3104a87be7b4fb306bee892af2f31","fixture_origin":"synthetic-core-interop-20261125","source_id":"fixture_editor","utterance_id":"line_one","utterance":"青签这单说的“放行”是哪种？","locale":"zh-CN","input_spans":[{"surface":"放行","start":21,"end":27}],"intent":"question","alternatives":[{"sense_id":"warehouse","goal":{"predicate":"dock_route","polarity":"positive","arguments":[{"type":"sym","value":"blue"}]},"unbound_variables":[],"source_refs":["fixture_sentence"],"premises":["ticket blue under review"]},{"sense_id":"funds","goal":{"predicate":"fund_route","polarity":"positive","arguments":[{"type":"sym","value":"blue"}]},"unbound_variables":[],"source_refs":["fixture_sentence"],"premises":["ticket blue under review"]}],"disambiguation":"ask","missing":["dock_context(blue)"],"lexicon_version":"fixture_v1"}
+diff --git a/fixtures/outcome/lexicon-senses.jsonl b/fixtures/outcome/lexicon-senses.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..c4525fec1fbd1cad2edf4fd651b7e0d6087af244
+--- /dev/null
++++ b/fixtures/outcome/lexicon-senses.jsonl
+@@ -0,0 +1,2 @@
++{"schema":"cl-lexicon-sense-v1","case_id":"bluepass","baseline_version":"source-sha256:9e456752f08769fb3757c21665587c847ec3104a87be7b4fb306bee892af2f31","fixture_origin":"synthetic-core-interop-20261125","source_id":"fixture_editor","sense_id":"warehouse","headword":"放行","aliases":[],"gloss_zh":"表示工单进入仓储放行流程","domain":"模拟工单","predicate_signature":{"predicate":"dock_route","types":["sym"]},"source_refs":["fixture_sentence"],"tier":"fixture","decision":"candidate","reviewer_note":"仅供接口复验","previous_revision":null}
++{"schema":"cl-lexicon-sense-v1","case_id":"bluepass","baseline_version":"source-sha256:9e456752f08769fb3757c21665587c847ec3104a87be7b4fb306bee892af2f31","fixture_origin":"synthetic-core-interop-20261125","source_id":"fixture_editor","sense_id":"funds","headword":"放行","aliases":[],"gloss_zh":"表示工单进入款项放行流程","domain":"模拟工单","predicate_signature":{"predicate":"fund_route","types":["sym"]},"source_refs":["fixture_sentence"],"tier":"fixture","decision":"candidate","reviewer_note":"仅供接口复验","previous_revision":null}
+diff --git a/fixtures/outcome/provider.cl b/fixtures/outcome/provider.cl
+new file mode 100644
+index 0000000000000000000000000000000000000000..14ecbdab5e5ba4fa89823d929b8ff7058b9cdc33
+--- /dev/null
++++ b/fixtures/outcome/provider.cl
+@@ -0,0 +1,3 @@
++module desk.
++export dock_context.
++: dock_context(sym).
+diff --git a/fixtures/outcome/routes.cl b/fixtures/outcome/routes.cl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0f61da0d9034c1d66a15c7ab8f2068adbb0575c
+--- /dev/null
++++ b/fixtures/outcome/routes.cl
+@@ -0,0 +1,8 @@
++: filed(sym).
++: dock_context(sym).
++: dock_route(sym).
++: fund_route(sym).
++dock_route($x) <- filed($x) & dock_context($x).
++!dock_route($x) <- !dock_context($x).
++fund_route($x) <- filed($x) & !dock_context($x).
++!fund_route($x) <- dock_context($x).
+diff --git a/fixtures/outcome/source-observations.jsonl b/fixtures/outcome/source-observations.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..6c39fe73d6f788b8b779a4135bdebedfd06dcd63
+--- /dev/null
++++ b/fixtures/outcome/source-observations.jsonl
+@@ -0,0 +1,3 @@
++{"schema":"cl-source-observation-v1","case_id":"bluepass","baseline_version":"source-sha256:9e456752f08769fb3757c21665587c847ec3104a87be7b4fb306bee892af2f31","retrieved_at":"2026-11-25T00:00:00Z","supersedes":[],"endpoint_mismatch":false,"confidence_basis":"synthetic provenance fixed for interface test only","source_id":"register_a","lineage_refs":["register_a"],"endpoint_scope":"synthetic:register_a","digest":"246ff2711fa2a232b5b42ba5a3d48eaf5d5bdd4039c33a52806d46e27e5fe70c","excerpt_ref":"excerpt:register_a","excerpt":"blue entry filed.","claim":{"predicate":"filed","polarity":"positive","arguments":[{"type":"sym","value":"blue"}],"scope":"bluepass"},"fixture_admission_id":"register_a"}
++{"schema":"cl-source-observation-v1","case_id":"bluepass","baseline_version":"source-sha256:9e456752f08769fb3757c21665587c847ec3104a87be7b4fb306bee892af2f31","retrieved_at":"2026-11-25T00:00:00Z","supersedes":[],"endpoint_mismatch":false,"confidence_basis":"synthetic provenance fixed for interface test only","source_id":"register_mirror","lineage_refs":["register_a"],"endpoint_scope":"synthetic:register_a","digest":"246ff2711fa2a232b5b42ba5a3d48eaf5d5bdd4039c33a52806d46e27e5fe70c","excerpt_ref":"excerpt:register_mirror","excerpt":"blue entry filed.","claim":{"predicate":"filed","polarity":"positive","arguments":[{"type":"sym","value":"blue"}],"scope":"bluepass"},"fixture_admission_id":"register_a"}
++{"schema":"cl-source-observation-v1","case_id":"bluepass","baseline_version":"source-sha256:9e456752f08769fb3757c21665587c847ec3104a87be7b4fb306bee892af2f31","retrieved_at":"2026-11-25T00:00:00Z","supersedes":[],"endpoint_mismatch":false,"confidence_basis":"synthetic provenance fixed for interface test only","source_id":"desk_b","lineage_refs":["desk_b"],"endpoint_scope":"synthetic:desk_b","digest":"44179071bd6f58a239db0452419e99f7aec7e7105997323e0559bb47f557e617","excerpt_ref":"excerpt:desk_b","excerpt":"blue entry is on the dock workflow.","claim":{"predicate":"dock_context","polarity":"positive","arguments":[{"type":"sym","value":"blue"}],"scope":"bluepass"},"fixture_admission_id":"desk_b"}
+diff --git a/fixtures/repair-parcels.cl b/fixtures/repair-parcels.cl
+new file mode 100644
+index 0000000000000000000000000000000000000000..b03030e99c633e074f8bc4ef908208ba6d0e31a7
+--- /dev/null
++++ b/fixtures/repair-parcels.cl
+@@ -0,0 +1,14 @@
++# Synthetic predeclared sorting-line policy. The two observed stalls and the
++# held-out parcel share the same sensor signature. Crushed parcels are vetoed.
++: stalled(sym).
++: scanned(sym).
++: release(sym).
++: packed(sym).
++: note(sym).
++@ stalled scanned release.
++release($x) <- scanned($x) & packed($x).
++| wish positive release(amber).
++| wish positive release(blue).
++| wish positive release(copper).
++| hard negative release(crushed).
++& veto !release(crushed).
+diff --git a/fixtures/repair-parcels.observations b/fixtures/repair-parcels.observations
+new file mode 100644
+index 0000000000000000000000000000000000000000..e19e973855413f3e8cacdfdbc2c527dedc208975
+--- /dev/null
++++ b/fixtures/repair-parcels.observations
+@@ -0,0 +1,5 @@
++:observe stall_a stalled(amber)
++:observe scan_a scanned(amber)
++:observe stall_b stalled(blue)
++:observe scan_b scanned(blue)
++:observe scan_holdout scanned(copper)
+diff --git a/fixtures/repair-second-scope.cl b/fixtures/repair-second-scope.cl
+new file mode 100644
+index 0000000000000000000000000000000000000000..1f714623e5a4f25d59e901e28081bf65ec136c5a
+--- /dev/null
++++ b/fixtures/repair-second-scope.cl
+@@ -0,0 +1,11 @@
++# Additional, independently scored scope for comparison with an active rollback.
++: delayed(sym).
++: indexed(sym).
++: notify(sym).
++: signed_off(sym).
++@ delayed indexed notify.
++notify($x) <- indexed($x) & signed_off($x).
++| wish positive notify(green).
++| wish positive notify(gold).
++| hard negative notify(held).
++& hold !notify(held).
+diff --git a/handoff-checks/CORE-FIXTURE-SHA256SUMS b/handoff-checks/CORE-FIXTURE-SHA256SUMS
+new file mode 100644
+index 0000000000000000000000000000000000000000..d8dcf53e1ee814a4ff86102cc8be2090de7c282f
+--- /dev/null
++++ b/handoff-checks/CORE-FIXTURE-SHA256SUMS
+@@ -0,0 +1,10 @@
++8bb5f9b3e235666cd12d34e9b01cbbad6383d0fd6fcce08b979fa58120f49dbc  fixtures/agenda-discovery.cl
++d585551a4b7d2f04366c2bb3f89e0d98b5d530cbeb41a4e68fb43ae774786b1e  fixtures/agenda-independent.cl
++2cd32f1b64ff135ac53eb53a3152fe4e1cf137c2afa2617daab6bd7942ee7cdf  fixtures/outcome/dialogue-candidate.jsonl
++672fe1c22716cc5c25ea8859c259c2ebf6b62b1e844ddd911d9c7c7645802e2a  fixtures/outcome/lexicon-senses.jsonl
++39f4a150d3632320d3d2a0c2a53fe57c1d50015b1ac7a661e3972167c630d89d  fixtures/outcome/provider.cl
++e5a8d4deb289e4b8f17fd90ce8a80fee88c6bdafffe0241e5210bb21ef599c26  fixtures/outcome/routes.cl
++e4e30b65f127a553624e4d36190e6aebe7063c32e6da49945d642e97d7ff0b47  fixtures/outcome/source-observations.jsonl
++323efad44118cf44478537033e6657c3af2abd4899f31c102d143cb5fdfc7aba  fixtures/repair-parcels.cl
++a93bea949bdb16919bffb08597bfa4f0d4ccd43397424f379c8bff2441a28326  fixtures/repair-parcels.observations
++c26794387d7d5435cff6b7a780c0d2215c0c660eafbfbcb3eb1ca6308dbb6f9e  fixtures/repair-second-scope.cl
+diff --git a/handoff-checks/reasoned-outcome-check.py b/handoff-checks/reasoned-outcome-check.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..fe2426c2337eabfbf8b5919be741398195f1855c
+--- /dev/null
++++ b/handoff-checks/reasoned-outcome-check.py
+@@ -0,0 +1,265 @@
++"""Run from SOURCE: python3 handoff-checks/reasoned-outcome-check.py ./pcgm-alpha ./cl
++
++Stdout is a JSONL transcript of the native outcome payloads. The preclassified
++source and language records are interface fixtures, supplied independently of
++the core under test. No external service or parser is simulated by this driver.
++"""
++import hashlib
++import json
++import os
++from contextlib import contextmanager
++from pathlib import Path
++import select
++import subprocess
++import sys
++from tempfile import TemporaryDirectory
++
++
++pcgm, cl = (Path(arg).resolve(strict=True) for arg in sys.argv[1:3])
++fixtures = Path(__file__).resolve().parents[1] / "fixtures"
++inputs = fixtures / "outcome"
++
++
++def sha(data):
++    return hashlib.sha256(data).hexdigest()
++
++
++def run(binary, *args, wire=""):
++    p = subprocess.run([binary, *args], input=wire.encode(), capture_output=True, timeout=120)
++    assert p.returncode == 0 and not p.stderr, (p.args, p.stdout, p.stderr)
++    return p.stdout
++
++
++def rows(name):
++    return [json.loads(line) for line in (inputs / name).read_text(encoding="utf-8").splitlines()]
++
++
++def proof_lines(stdout):
++    return [json.loads(line) for line in stdout.splitlines() if line.startswith(b'{"schema":')]
++
++
++def proof_atom(atom):
++    return atom["predicate"] + "(" + ",".join(arg["value"] for arg in atom["arguments"]) + ")"
++
++
++@contextmanager
++def resident(state):
++    rfd,wfd = os.pipe()
++    try:
++        p = subprocess.Popen([pcgm, "--resume-agenda-local", state, str(rfd)], stdin=subprocess.PIPE,
++                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, pass_fds=(rfd,), bufsize=0)
++    except BaseException:
++        os.close(wfd)
++        raise
++    finally:
++        os.close(rfd)
++
++    def receive():
++        assert select.select([p.stdout], [], [], 120)[0], "resident timed out"
++        line = p.stdout.readline()
++        assert line, "resident exited before returning a frame"
++        return json.loads(line)
++
++    def approve(frame):
++        os.write(wfd, (frame+"\n").encode())
++        reply = receive()
++        assert reply["ok"] and reply["channel"] == "approval", reply
++        return reply["payload"]
++
++    try:
++        yield receive(), approve
++    finally:
++        p.stdin.close()
++        os.close(wfd)
++        try:
++            assert p.wait(timeout=120) == 0 and not p.stderr.read()
++        finally:
++            if p.poll() is None:
++                p.kill()
++                p.wait()
++            p.stdout.close()
++            p.stderr.close()
++
++
++def reviewed_answer(root, state, ticket, request, claim):
++    lock, api, pkg, goals, journal = [root / n for n in ("lock", "api", "pkg", "goals", "journal")]
++    source = inputs / "provider.cl"
++    lock.write_bytes(run(cl, "lock", source))
++    api.write_bytes(run(cl, "project-api", source, lock))
++    pkg.write_bytes(run(cl, "project-pack", source, lock, api))
++    package = sha(pkg.read_bytes())
++    fact = proof_atom(claim)
++    goals.write_text(fact+"\n")
++    init = json.loads(run(cl, "evidence-init", pkg, package, goals, journal,
++                          wire=f"y batch desk 0 ; observe independent {fact}\n"))
++    assert init["ok"], init
++    snapshot = sha(journal.read_bytes())
++    inbox = root / "incoming"
++    inbox.mkdir()
++    frozen = inbox / "desk.clef"
++    frozen.write_bytes(run(cl, "evidence-freeze", pkg, package, goals, journal, snapshot))
++    artifact = sha(frozen.read_bytes())
++    proof = json.loads(run(pcgm, "--frozen-question-review", state, ticket, request, frozen,
++                           artifact, package, snapshot))
++    return artifact, package, snapshot, proof["proof_sha256"]
++
++
++def scenario(root):
++    for line in (inputs/"SHA256SUMS").read_text(encoding="ascii").splitlines():
++        expected, name = line.split()
++        assert sha((inputs/name).read_bytes()) == expected,name
++    case = "bluepass"
++    sentence, = rows("dialogue-candidate.jsonl")
++    senses = {s["sense_id"]: s for s in rows("lexicon-senses.jsonl")}
++    spans = sentence["input_spans"]
++    raw = sentence["utterance"].encode()
++    assert all(raw[s["start"]:s["end"]].decode() == s["surface"] for s in spans)
++    goals = []
++    for candidate in sentence["alternatives"]:
++        goal = candidate["goal"]
++        assert goal["predicate"] == senses[candidate["sense_id"]]["predicate_signature"]["predicate"]
++        goals.append(proof_atom(goal))
++    cargo, funds = goals
++    original, replica, independent = rows("source-observations.jsonl")
++    assert all(sha(r["excerpt"].encode()) == r["digest"] for r in (original, replica, independent))
++    assert original["lineage_refs"] == replica["lineage_refs"] != independent["lineage_refs"]
++    assert all(r["case_id"] == case for r in [sentence, original, replica, independent, *senses.values()])
++    state = root / "actor"
++
++    def read(frame, ok=True):
++        before = state.read_bytes()
++        result = json.loads(run(pcgm, "--read-channel", state, wire="req "+frame+"\n"))
++        assert state.read_bytes() == before and result["ok"] == ok, result
++        return result.get("payload") if ok else result["error"]
++
++    def resume(command):
++        return run(pcgm, "--resume", state, wire=command+"\n")
++
++    def outcome(goal, expected, basis="", emit=True):
++        value = read(f"reasoned_outcome {case} {goal}"+(f" since {basis}" if basis else ""))
++        assert value["schema"] == "pcgm-reasoned-outcome-v1" and value["case_id"] == case
++        assert value["baseline_version"] == sentence["baseline_version"] and proof_atom(value["goal"]) == goal
++        assert value["status"] == expected and value["state_revision"] == read("storage")["logical_sha256"]
++        assert value["positive_proof"]["supported"] == (expected in ("POSITIVE","CONFLICT"))
++        assert value["negative_proof"]["supported"] == (expected in ("NEGATIVE","CONFLICT"))
++        if basis:
++            effect = value["effect_receipt"]
++            assert effect["state_revision"] == value["state_revision"] and not effect["writes_state"]
++            assert effect["after_status"] == expected and proof_atom(effect["effect_point"]) == goal
++        else:
++            assert value["effect_receipt"] is None
++        if emit:
++            print(json.dumps(value, ensure_ascii=False, separators=(",",":")), flush=True)
++        return value
++
++    def fixture_observation(row):
++        # The source line owns lineage verification. Here its frozen family
++        # binding and typed claim are the precondition for core-level replay.
++        return f":observe {row['fixture_admission_id']} {proof_atom(row['claim'])}"
++
++    run(pcgm, "--init-managed", inputs/"routes.cl", state, wire=fixture_observation(original)+"\n")
++    before = state.read_bytes()
++    assert b"observation_unchanged" in resume(fixture_observation(replica)) and state.read_bytes() == before
++    assert not read("question_feed 0 16")["results"]
++    unknown = outcome(cargo, "UNKNOWN")
++    assert [proof_atom(g) for g in unknown["missing"]] == ["dock_context(blue)"]
++    assert unknown["question_ticket"] is None and not unknown["positive_proof"]["nodes"]
++    outcome(funds, "UNKNOWN")
++
++    with resident(state) as (startup,approve):
++        scan = startup["agenda"]
++        review = scan["proposed_review"]
++        assert scan["eligible_count"] == 1 and proof_atom(review["current"]["goal"]) == cargo
++        assert review["investigation"]["distinguishes_consequence"]
++        assert {b["consequence"]["status"] for b in review["investigation"]["branches"]} == {"POSITIVE","NEGATIVE"}
++        assert proof_atom(review["investigation"]["premise"]) == proof_atom(independent["claim"])
++        actor, head, reviewed = startup["actor"], startup["head_sha256"], scan["review_sha256"]
++        approval = sha(f"PCGM-LOCAL-AGENDA-APPROVAL-1\n{actor}\n{head}\n{reviewed}\n".encode())
++        enrollment = approve(f"enroll_agenda {actor} {head} {reviewed} {approval}")
++        ticket = enrollment["ticket"]
++        waiting = outcome(cargo, "UNKNOWN")
++        question, = waiting["questions"]
++        assert waiting["question_ticket"] == ticket and question["status"] == "open"
++        req = question["request_sha256"]
++        pins = reviewed_answer(root, state, ticket, req, independent["claim"])
++
++    # Persist focus and an exact baseline before reopening the approval pipe.
++    assert b"chat_committed" in resume(f":chat {case} t0 focus {cargo}")
++    resume(":pin waiting")
++    with resident(state) as (startup,approve):
++        assert startup["actor"] == actor
++        artifact, package, snapshot, proof = pins
++        frame = f"answer {actor} {startup['head_sha256']} {ticket} {req} desk {artifact} {package} {snapshot} {proof}"
++        answer = approve(frame)
++        assert answer["writes_state"]
++        observed = answer["observation"]
++
++    positive = outcome(cargo,"POSITIVE","waiting")
++    neg = outcome(funds,"NEGATIVE","waiting")
++    evidence, = positive["questions"][0]["evidence"]
++    assert evidence["active"] and evidence["observation"] == observed and evidence["cl_proof_sha256"] == proof
++    change, = positive["effect_receipt"]["observation_changes"]
++    assert change["observation_id"] == observed and change["in_after_witness"] and change["before"] is None
++    assert change["status_if_change_undone"] == "UNKNOWN" and not positive["effect_receipt"]["rules_added"]
++    assert neg["effect_receipt"]["conclusion_changed"]
++    # Chat receives exactly what the read-only caller saw at the pre-turn head.
++    dialogue = resume(f":chat {case} t1 outcome since waiting")
++    same, = proof_lines(dialogue)
++    assert same == positive
++    resume(":pin answered")
++    resume(":observe challenger !dock_context(blue)")
++    conflict = outcome(cargo,"CONFLICT","answered")
++    outcome(funds,"CONFLICT","answered")
++    change, = conflict["effect_receipt"]["observation_changes"]
++    assert change["observation_id"] == "challenger" and change["status_if_change_undone"] == "POSITIVE"
++    resume(":pin contested")
++    resume(":withdraw "+observed)
++    negative = outcome(cargo,"NEGATIVE","contested")
++    outcome(funds,"POSITIVE","contested")
++    removed, = negative["effect_receipt"]["observation_changes"]
++    assert removed["observation_id"] == observed and removed["after"] is None
++    assert removed["in_before_witness"] and removed["status_if_change_undone"] == "CONFLICT"
++    assert negative["question_ticket"] == ticket and not negative["questions"][0]["evidence"][0]["active"]
++    resume(":withdraw challenger")
++    final = outcome(cargo,"UNKNOWN","waiting")
++    assert final["question_ticket"] == ticket and final["questions"][0]["status"] == "open"
++    assert not final["effect_receipt"]["conclusion_changed"] and not final["effect_receipt"]["proof_changed"]
++    before = state.read_bytes()
++    replay = resume(f":chat {case} t1 outcome since waiting")
++    assert b"chat_replayed" in replay and proof_lines(replay) == [positive] and state.read_bytes() == before
++    assert "unknown outcome comparison pin" in read(f"reasoned_outcome {case} {cargo} since absent",ok=False)
++    assert final["source_id"] == actor and len(read("question_feed 0 16")["results"]) == 1
++
++
++def check_rule_switch(root):
++    state = root / "repair_actor"
++    wire = (fixtures/"repair-parcels.observations").read_text(encoding="utf-8")
++    run(pcgm, "--init-managed", fixtures/"repair-parcels.cl", state, wire=wire+"\n:pin prior\n")
++    response, = proof_lines(run(pcgm, "--resume", state, wire=":repair_step\n"))
++    assert response["writes_state"],response
++
++    def result(pin):
++        before=state.read_bytes()
++        row=json.loads(run(pcgm,"--read-channel",state,wire=f"q reasoned_outcome parcel release(copper) since {pin}\n"))
++        assert row["ok"] and before==state.read_bytes(),row
++        print(json.dumps(row["payload"],ensure_ascii=False,separators=(",",":")),flush=True)
++        return row["payload"]["effect_receipt"]
++
++    effect = result("prior")
++    added, = effect["rules_added"]
++    assert effect["before_status"]=="UNKNOWN" and effect["after_status"]=="POSITIVE"
++    assert added["in_witness"] and added["rule"]=="release($x) <- scanned($x)."
++    assert not effect["observation_changes"] and not effect["rules_removed"]
++    plans = run(pcgm, "--resume",state,wire=":pin hot\n:plans\n")
++    applied, = [row.split()[1].decode() for row in plans.splitlines() if row.startswith(b"plan ") and b" applied " in row]
++    assert b"revision_reverted" in run(pcgm, "--resume",state,wire=f":rollback {applied}\n")
++    rolled = result("hot")
++    assert rolled["rules_removed"] == [added] and not rolled["rules_added"]
++    assert rolled["before_status"]=="POSITIVE" and rolled["after_status"]=="UNKNOWN"
++
++
++with TemporaryDirectory(prefix="pcgm-outcomes-") as tmp:
++    root = Path(tmp)
++    scenario(root)
++    check_rule_switch(root)
++print("PASS: four values; case, proofs, open ticket, exact frozen evidence and withdrawal; dialogue replay; applied and rolled-back rule attribution",file=sys.stderr)
+diff --git a/handoff-checks/repair-check.py b/handoff-checks/repair-check.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..666907fa9095eb9c82d6369160639a0cc8d3cad6
+--- /dev/null
++++ b/handoff-checks/repair-check.py
+@@ -0,0 +1,195 @@
++"""Run from SOURCE: python3 handoff-checks/repair-check.py ./pcgm-alpha"""
++import hashlib
++import json
++from pathlib import Path
++import select
++import subprocess
++import sys
++from tempfile import TemporaryDirectory
++
++
++binary = Path(sys.argv[1]).resolve(strict=True)
++fixtures = Path(__file__).resolve().parents[1] / "fixtures"
++policy = (fixtures / "repair-parcels.cl").read_text()
++observations = (fixtures / "repair-parcels.observations").read_text().splitlines()
++
++
++def run(*args, commands=()):
++    proc = subprocess.run([binary, *args], input="".join(x + "\n" for x in commands),
++                          text=True, capture_output=True, timeout=20)
++    assert proc.returncode == 0 and not proc.stderr and "QUERY_ERROR " not in proc.stdout, (proc.args, proc.stdout, proc.stderr)
++    return proc.stdout
++
++
++def init(root, name, program, rows):
++    path, source = root / name, root / (name + ".cl")
++    source.write_text(program)
++    run("--init-managed", source, path, commands=rows)
++    return path
++
++
++def split_state(path):
++    head, source = path.read_bytes().split(b"\nsource\n", 1)
++    magic, _, actor, *events = head.splitlines()
++    assert magic == b"PCGM-STATE-1"
++    return actor.decode(), events, source
++
++
++def proof(path, prop):
++    raw = run("--read-channel", path, commands=["a proof " + prop])
++    return json.loads(raw)["payload"]["results"][0]["status"]
++
++
++def ranked(receipt, kind, slot=0):
++    return [o for o in receipt["decision"]["options"] if o["kind"] == kind][slot]
++
++
++def selected(receipt):
++    decision = receipt["decision"]
++    idx = decision["selected"]
++    return decision["options"][idx]["kind"] if idx is not None else None
++
++
++def check_raw(label, path, command=":repair_compare"):
++    raw = run("--resume", path, commands=[command])
++    record, = [line for line in raw.splitlines() if line.startswith("{")]
++    print(label, record, flush=True)
++    return json.loads(record)
++
++
++with TemporaryDirectory(prefix="pcgm-repair-") as tmp:
++    root = Path(tmp)
++    first = init(root, "single", policy, observations[:2])
++    original = first.read_bytes()
++    single = check_raw("single_witness", first, ":repair_step")
++    assert not single["writes_state"] and selected(single) == "stay"
++    assert "fewer than two" in ranked(single, "rewrite")["blocked_reason"] and first.read_bytes() == original
++    assert single["knowledge_review"]["premise"]["predicate"] == "packed"
++    assert single["knowledge_review"]["ticket"] is None
++    assert [x["status"] for x in single["knowledge_review"]["hypotheses"]] == ["POSITIVE", "UNKNOWN"]
++
++    # Two new subjects occur only in incoming evidence. Fixed review cases
++    # contain neither name and the host supplies no candidate rule or subject.
++    fresh_rows = [":observe fault_v stalled(violet)", ":observe scan_v scanned(violet)",
++                  ":observe fault_w stalled(white)", ":observe scan_w scanned(white)",
++                  ":observe check_sample scanned(copper)"]
++    unnamed = init(root, "novel", policy, fresh_rows)
++    discovered = check_raw("unlisted_stall_subjects", unnamed, ":repair_step")
++    assert discovered["writes_state"] and set(discovered["rule_reviews"][-1]["stalled_cases"]) == {
++        "release(violet)", "release(white)"}
++    assert proof(unnamed, "release(white)") == proof(unnamed, "release(copper)") == "POSITIVE"
++
++    # Actually compile and evaluate the bad generalization. The negative
++    # control becomes conflicted: the candidate cannot write even if wishes improve.
++    incorrect = init(root, "unsafe", policy, observations + [":observe scan_veto scanned(crushed)"])
++    original = incorrect.read_bytes()
++    denied = check_raw("counterexample_rejection", incorrect, ":repair_step")
++    trial = ranked(denied, "rewrite")
++    assert trial["wishes"] == 3 and not trial["eligible"]
++    assert denied["rule_reviews"][-1]["compiled_cl_slice_sha256"]
++    assert any(x["expected"] == "NEGATIVE" and x["after"] == "CONFLICT" for x in trial["criteria"])
++    assert not denied["writes_state"] and original == incorrect.read_bytes()
++
++    # A currently dormant downstream rule would affect another predicate after
++    # a future observation. The candidate must be refused before this happens.
++    downstream = init(root, "outside", policy + "\n: future(sym).\nfuture($x) <- release($x) & note($x).\n", observations)
++    guarded = check_raw("future_scope_guard", downstream, ":repair_step")
++    assert not guarded["writes_state"] and "downstream" in ranked(guarded, "rewrite")["blocked_reason"]
++
++    # The wrong scope is declared first so that the chooser cannot select the
++    # first proposal by construction.
++    second = (fixtures / "repair-second-scope.cl").read_text()
++    additions = [":observe second_a delayed(green)", ":observe second_b delayed(gold)",
++                 ":observe second_scan_a indexed(green)", ":observe second_scan_b indexed(gold)"]
++    # The negative input is later withdrawn, which makes this initially wrong
++    # candidate legal at exactly the same time as rolling back the first change.
++    initial = observations + additions + [":observe bad_scan indexed(held)"]
++    path = init(root, "managed", second + "\n" + policy, initial)
++    identity, prefix, source_before = split_state(path)
++    pid_before = None
++    with subprocess.Popen([binary, "--resume", path], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
++                          stderr=subprocess.PIPE, text=True, bufsize=1) as writer:
++        try:
++            pid_before = writer.pid
++            assert select.select([writer.stdout], [], [], 10)[0]
++            assert "individual=" + identity in writer.stdout.readline()
++
++            def command(line):
++                writer.stdin.write(line + "\n:plans\n")
++                writer.stdin.flush()
++                rows = []
++                # The engine flushes every insertion; Python's buffered reader
++                # can already hold following lines after one descriptor wakeup.
++                assert select.select([writer.stdout], [], [], 20)[0]
++                for row in writer.stdout:
++                    row = row.rstrip("\n")
++                    assert not row.startswith("QUERY_ERROR"), row
++                    if row.startswith("plans_end "):
++                        return rows
++                    rows.append(row)
++                raise AssertionError("writer closed before command finished")
++
++            def live(tag, operation):
++                raw, = [x for x in command(operation) if x.startswith("{")]
++                print(tag, raw, flush=True)
++                return json.loads(raw)
++
++            old = path.read_bytes()
++            preview = live("comparison_before", ":repair_compare")
++            assert selected(preview) == "rewrite" and not preview["writes_state"] and old == path.read_bytes()
++            assert set(o["kind"] for o in preview["decision"]["options"]) == {"stay", "rollback", "rewrite", "knowledge"}
++            assert not ranked(preview, "rewrite", 0)["eligible"] and ranked(preview, "rewrite", 1)["eligible"]
++            evidence = preview["rule_reviews"][-1]
++            assert set(evidence["stalled_cases"]) == {"release(amber)", "release(blue)"}
++            assert set(evidence["proof_origins"]) == {"obs:stall_a", "obs:stall_b", "obs:scan_a", "obs:scan_b"}
++            assert proof(path, "release(copper)") == "UNKNOWN"
++            accepted = live("same_pid_rule_commit", ":repair_step")
++            assert accepted["writes_state"] and accepted["actor"] == identity and selected(accepted) == "rewrite"
++            assert accepted["basis_sha256"] == preview["basis_sha256"] == hashlib.sha256(old).hexdigest()
++            assert proof(path, "release(copper)") == "POSITIVE" and proof(path, "release(crushed)") == "NEGATIVE"
++            assert "release(copper)" in "\n".join(command(":explain release(copper)"))
++            actor_after, events_after, source_after = split_state(path)
++            assert actor_after == identity and events_after[:len(prefix)] == prefix
++            proposal = bytes.fromhex(next(e for e in events_after[len(prefix):] if e.startswith(b"proposal ")).split()[-1].decode())
++            assert source_after == source_before + b"\n" + proposal
++            assert proposal.endswith(b"release($x) <- scanned($x).\n")
++            competitor = subprocess.run([binary, "--resume", path], capture_output=True, timeout=10)
++            assert competitor.returncode and b"already has a writer" in competitor.stderr
++
++            saved = path.read_bytes()
++            replay = live("unchanged_on_next_tick", ":repair_step")
++            assert selected(replay) == "stay" and not replay["writes_state"] and saved == path.read_bytes()
++            command(":withdraw bad_scan")
++            peers = live("two_legal_alternatives", ":repair_compare")
++            assert ranked(peers, "rollback")["eligible"] and ranked(peers, "rewrite", 0)["eligible"]
++            assert selected(peers) == "rewrite" and not peers["writes_state"]
++            # New experience after publication must survive the rollback.
++            command(":observe later note(later)")
++            command(":observe scanner_fault scanned(crushed)")
++            assert proof(path, "release(crushed)") == "CONFLICT"
++            _, old_events, old_source = split_state(path)
++            rollback = live("same_pid_rollback", ":repair_step")
++            assert rollback["writes_state"] and selected(rollback) == "rollback"
++            assert rollback["actor"] == identity and writer.pid == pid_before and writer.poll() is None
++            actor_final, events_final, source_final = split_state(path)
++            assert actor_final == identity and events_final[:len(old_events)] == old_events
++            assert source_final == source_before + old_source[len(source_after):]
++            assert events_final[len(old_events)].startswith(b"revert ")
++            assert proof(path, "note(later)") == "POSITIVE" and proof(path, "release(crushed)") == "NEGATIVE"
++            assert proof(path, "release(copper)") == "UNKNOWN"
++            print(json.dumps({"writer_pid": writer.pid, "actor": identity, "prior_events_retained": len(old_events),
++                              "events_after_rollback": len(events_final), "post_update_observation": "later",
++                              "original_rule_source_and_later_input_bytes_match": True}), flush=True)
++        finally:
++            writer.stdin.close()
++            if writer.wait(timeout=15) or writer.stderr.read():
++                raise AssertionError("managed writer failed")
++    cold_bytes = path.read_bytes()
++    assert "individual=" + identity in run("--inspect", path)
++    saved = run("--resume", path, commands=[":decision_receipt " + accepted["decision_event"],
++                                            ":decision_receipt " + rollback["decision_event"]])
++    recorded = [json.loads(row) for row in saved.splitlines() if row.startswith("{")]
++    assert recorded == [accepted["decision"], rollback["decision"]]
++    assert path.read_bytes() == cold_bytes and proof(path, "note(later)") == "POSITIVE"
++print("PASS: scoped native CL repair on repeated stalls; two signed controls, rejected candidate, "
++      "four-way comparison, two legal alternatives, atomic live replacement and lossless rollback.")
+diff --git a/handoff-checks/verify-core.sh b/handoff-checks/verify-core.sh
+new file mode 100644
+index 0000000000000000000000000000000000000000..0e377a53d4022c56cbf60bd1d4ac44bb21697849
+--- /dev/null
++++ b/handoff-checks/verify-core.sh
+@@ -0,0 +1,58 @@
++#!/usr/bin/env bash
++# Run inside the patched SOURCE directory. Supply a new directory for raw logs.
++set -euo pipefail
++if [[ $# != 1 ]]; then echo "usage: bash handoff-checks/verify-core.sh NEW_LOG_DIRECTORY" >&2; exit 2; fi
++mkdir -- "$1"
++logs=$(cd -- "$1" && pwd)
++cd -- "$(dirname -- "$0")/.."
++export PYTHONDONTWRITEBYTECODE=1
++exec > >(tee "$logs/run.log") 2>&1
++run() {
++    local label=$1
++    shift
++    printf '%s  ' "$label"
++    printf ' %q' "$@"
++    printf '\n'
++    if "$@" </dev/null >"$logs/$label.log" 2>&1; then
++        echo "PASS $label"
++    else
++        local rc=$?
++        tail -c 1600 "$logs/$label.log" >&2
++        echo "FAIL $label rc=$rc" >&2
++        exit "$rc"
++    fi
++}
++outcomes() {
++    local name=$1 binary=$2 cl=$3
++    python3 handoff-checks/reasoned-outcome-check.py "$binary" "$cl" >"$logs/outcomes-$name.jsonl"
++}
++date -u
++uname -srmo
++"${CXX:-c++}" --version
++python3 --version
++run fixtures sha256sum -c handoff-checks/CORE-FIXTURE-SHA256SUMS
++run build make -j"${JOBS:-2}" cl pcgm-alpha pcgm-beta projection-check-build cl-projection-two-worker
++for name in alpha beta; do
++    pcgm="./pcgm-$name"
++    run "native-$name" python3 handoff-checks/native-check.py ./cl "$pcgm"
++    run "anchored-$name" python3 handoff-checks/anchored-check.py "$pcgm"
++    run "enroll-$name" python3 handoff-checks/enroll-check.py "$pcgm"
++    run "resident-$name" python3 handoff-checks/resident-check.py "$pcgm" ./cl
++    run "lost-ack-$name" python3 handoff-checks/resident-check.py "$pcgm" ./cl lost-ack
++    run "frozen-answer-$name" python3 handoff-checks/frozen-answer-check.py "$pcgm" ./cl
++    run "arithmetic-$name" python3 handoff-checks/arithmetic-check.py "$pcgm"
++done
++run frozen-admission python3 check-frozen-proof-admission.py
++for name in alpha beta direct; do
++    pcgm="./pcgm-$name"
++    cl=./cl
++    if [[ "$name" == direct ]]; then pcgm=./pcgm-projection-direct; cl=./cl-projection-direct; fi
++    run "agenda-$name" python3 handoff-checks/work-agenda-check.py "$pcgm" "$cl"
++    run "repair-$name" python3 handoff-checks/repair-check.py "$pcgm"
++    run "outcome-$name" outcomes "$name" "$pcgm" "$cl"
++done
++for test in criteria-questions question-handoff choice-reassessment observation-replay-audit native-projection; do
++    run "$test" python3 "check-$test.py"
++done
++sha256sum cl pcgm-alpha pcgm-beta cl-projection-direct pcgm-projection-direct projection-kernel-check cl-projection-two-worker
++date -u
+diff --git a/handoff-checks/work-agenda-check.py b/handoff-checks/work-agenda-check.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..40102133fe5ace30bcf7eb37eff6cddd2fc59d81
+--- /dev/null
++++ b/handoff-checks/work-agenda-check.py
+@@ -0,0 +1,247 @@
++"""Linux: python3 handoff-checks/work-agenda-check.py ./pcgm-alpha ./cl
++
++Both CL fixtures were authored locally and frozen before the first run.
++The answer lives in a separate native evidence journal/package.
++"""
++import hashlib
++import json
++import os
++from pathlib import Path
++import select
++import subprocess
++import sys
++from tempfile import TemporaryDirectory
++import time
++
++
++pcgm, cl = [Path(x).resolve(strict=True) for x in sys.argv[1:3]]
++fixtures = Path(__file__).resolve().parents[1] / "fixtures"
++source = fixtures / "agenda-discovery.cl"
++independent = fixtures / "agenda-independent.cl"
++
++
++def digest(data):
++    return hashlib.sha256(data).hexdigest()
++
++
++assert digest(source.read_bytes()) == "8bb5f9b3e235666cd12d34e9b01cbbad6383d0fd6fcce08b979fa58120f49dbc"
++assert digest(independent.read_bytes()) == "d585551a4b7d2f04366c2bb3f89e0d98b5d530cbeb41a4e68fb43ae774786b1e"
++
++
++def run(*args, wire=b"", refused=None):
++    p = subprocess.run(args, input=wire, capture_output=True, timeout=90)
++    if refused:
++        assert p.returncode and refused.encode() in p.stderr, (p.args, p.stdout, p.stderr)
++    else:
++        assert p.returncode == 0 and not p.stderr, (p.args, p.stdout, p.stderr)
++    return p.stdout
++
++
++def read(state, frame, concurrent=False):
++    old = state.read_bytes()
++    raw = run(pcgm, "--read-channel", state, wire=f"id {frame}\n".encode())
++    print("READ", frame, raw.decode().rstrip(), flush=True)
++    result = json.loads(raw)
++    assert result["ok"] and (concurrent or old == state.read_bytes()), result
++    return result["payload"]
++
++
++def update(state, text):
++    output = run(pcgm, "--resume", state, wire=text.encode())
++    assert b"error " not in output, output
++
++
++def expect_agenda(state, reason, goal=None, argument=None):
++    report = read(state, "agenda")
++    assert report["reason"] == reason and not report["writes_state"], report
++    proposed = report["proposed_review"]
++    if goal:
++        target = proposed["current"]["goal"]
++        assert target["predicate"] == goal and target["arguments"][0]["value"] == argument, target
++        assert any(n["origin"].startswith("obs:") for n in report["grounding"]["proof"]["nodes"])
++        assert proposed["current"]["status"] == "UNKNOWN"
++        assert [b["consequence"]["status"] for b in proposed["investigation"]["branches"]] == ["POSITIVE", "NEGATIVE"]
++        assert digest(json.dumps(proposed, separators=(",", ":"), ensure_ascii=False).encode()) == report["review_sha256"]
++    else:
++        assert proposed is None and report["review_sha256"] is None
++    return report
++
++
++class Resident:
++    def __init__(self, state):
++        r, self.w = os.pipe()
++        self.p = subprocess.Popen([pcgm, "--resume-agenda-local", state, str(r)], stdin=subprocess.PIPE,
++                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE, pass_fds=(r,), bufsize=0)
++        os.close(r)
++        self.start = self.receive()
++        print("RESIDENT PID", self.p.pid, flush=True)
++        assert self.start["schema"] == "pcgm-resident-agenda-v1", self.start
++
++    def receive(self):
++        assert select.select([self.p.stdout], [], [], 90)[0], "resident timed out"
++        reply = self.p.stdout.readline()
++        assert reply, self.p.stderr.read()
++        print("RESIDENT OUT", reply.decode().rstrip(), flush=True)
++        return json.loads(reply)
++
++    def send(self, channel, frame, ok=True):
++        data = (frame + "\n").encode()
++        print("RESIDENT IN", channel, frame, flush=True)
++        if channel == "read":
++            self.p.stdin.write(data)
++        else:
++            os.write(self.w, data)
++        reply = self.receive()
++        assert reply["channel"] == channel and reply["ok"] == ok, reply
++        return reply.get("payload")
++
++    def close(self, kill=False):
++        if kill:
++            print("SIGKILL PID", self.p.pid, "without reading approval ACK", flush=True)
++            self.p.kill()
++        self.p.stdin.close()
++        os.close(self.w)
++        code = self.p.wait(timeout=90)
++        if not kill:
++            assert code == 0 and not self.p.stderr.read(), code
++
++
++def permit(report, review=None):
++    actor, head = report["actor"], report["revision_sha256"]
++    review = review or report["review_sha256"]
++    pin = digest(f"PCGM-LOCAL-AGENDA-APPROVAL-1\n{actor}\n{head}\n{review}\n".encode())
++    return f"{actor} {head} {review} {pin}"
++
++
++def frozen_answer(root, state, ticket, request):
++    package, journal, lock, api, goals = [root / x for x in ("package", "journal", "lock", "api", "goals")]
++    provider = root / "provider.cl"
++    provider.write_bytes(independent.read_bytes())
++    lock.write_bytes(run(cl, "lock", provider))
++    api.write_bytes(run(cl, "project-api", provider, lock))
++    package.write_bytes(run(cl, "project-pack", provider, lock, api))
++    pkg = digest(package.read_bytes())
++    goals.write_text("checked(17)\n")
++    commit = json.loads(run(cl, "evidence-init", package, pkg, goals, journal,
++                            wire=b"x batch inspection 0 ; observe independent_check checked(17)\n"))
++    assert commit["ok"], commit
++    snapshot = digest(journal.read_bytes())
++    dest = root / "incoming" / "inspection.clef"
++    dest.parent.mkdir()
++    dest.write_bytes(run(cl, "evidence-freeze", package, pkg, goals, journal, snapshot))
++    artifact = digest(dest.read_bytes())
++    verified = json.loads(run(pcgm, "--frozen-question-review", state, ticket, request, dest, artifact, pkg, snapshot))
++    return f"{artifact} {pkg} {snapshot} {verified['proof_sha256']}"
++
++
++with TemporaryDirectory(prefix="pcgm-work-agenda-") as tmp:
++    root = Path(tmp)
++    state = root / "actor"
++    run(pcgm, "--init-managed", source, state)
++    expect_agenda(state, "insufficient_evidence")
++    update(state, ":observe wrong_literal reading(other,17)\n:observe first reading(sensor,17)\n")
++    selected = expect_agenda(state, "pending_approval", "ready", "17")
++    update(state, ":observe parcel arrival(cargo)\n")
++    tied = expect_agenda(state, "tied")
++    assert tied["eligible_count"] == 2 and not read(state, "question_feed 0 16")["results"]
++    update(state, ":observe dispute !reading(sensor,17)\n")
++    expect_agenda(state, "pending_approval", "released", "cargo")
++    update(state, ":withdraw parcel\n")
++    expect_agenda(state, "contested_or_unverified_grounding")
++    update(state, ":withdraw dispute\n")
++    assert selected["revision_sha256"] != expect_agenda(state, "pending_approval", "ready", "17")["revision_sha256"]
++    print("PASS discovery: empty, two distinct goals, typed variable projection, tied, contested, withdrawn")
++
++    resident = Resident(state)
++    auto = resident.start["agenda"]
++    assert auto == read(state, "agenda") and not read(state, "question_feed 0 16")["results"]
++    scope, actor = permit(auto), auto["actor"]
++    resident.send("approval", "enroll_agenda " + permit(selected), ok=False)
++    resident.send("approval", "enroll_agenda " + permit(auto, "0"*64), ok=False)
++    resident.send("read", "enroll_agenda " + scope, ok=False)
++    resident.send("approval", "agenda_receipt " + scope, ok=False)
++    assert resident.send("read", "agenda_receipt " + scope)["status"] == "not_recorded"
++    run(pcgm, "--resume", state, refused="state already has a writer")
++    # Write an approval, observe the durable commit from a second reader, then
++    # SIGKILL before reading the ACK. Reconcile the exact pin before any retry.
++    os.write(resident.w, f"enroll_agenda {scope}\n".encode())
++    deadline = time.monotonic() + 90
++    while not read(state, "question_feed 0 16", concurrent=True)["results"]:
++        assert time.monotonic() < deadline
++        time.sleep(.03)
++    resident.close(kill=True)
++    resident = Resident(state)
++    assert resident.start["agenda"]["reason"] == "already_ticketed"
++    receipt = resident.send("read", "agenda_receipt " + scope)
++    assert receipt["status"] == "recorded" and not receipt["writes_state"]
++    saved = state.read_bytes()
++    ticket = receipt["ticket"]
++    again = resident.send("approval", "enroll_agenda " + scope)
++    assert not again["writes_state"] and again["ticket"] == ticket and state.read_bytes() == saved
++    q, = read(state, "question_feed 0 16")["results"]
++    assert q["id"] == ticket and q["needed"]["predicate"] == "checked"
++    request = q["request_sha256"]
++    frozen = frozen_answer(root, state, ticket, request)
++    resident.close()
++    update(state, ":restore dispute\n")
++    assert read(state, "question " + ticket)["results"][0]["status"] == "superseded"
++    resident = Resident(state)
++    before = state.read_bytes()
++    resident.send("approval", f"answer {actor} {resident.start['head_sha256']} {ticket} {request} inspection {frozen}", ok=False)
++    assert resident.send("read", "agenda_receipt " + scope)["ticket"] == ticket and before == state.read_bytes()
++    resident.close()
++    update(state, ":withdraw dispute\n")
++    resumed = read(state, "question " + ticket)["results"][0]
++    assert resumed["status"] == "open" and resumed["request_sha256"] == request
++    resident = Resident(state)
++    approved = f"answer {actor} {resident.start['head_sha256']} {ticket} {request} inspection {frozen}"
++    answer = resident.send("approval", approved)
++    assert answer["writes_state"] and answer["next_agenda"]["reason"] == "already_decided", answer
++    key = f"answer_receipt {actor} {ticket} {request} {frozen}"
++    assert resident.send("read", key)["status"] == "recorded"
++    assert read(state, "proof ready(17)")["results"][0]["status"] == "POSITIVE"
++    resident.close()
++    update(state, ":observe contrary !checked(17)\n")
++    both = read(state, "proof ready(17)")["results"][0]
++    assert both["status"] == "CONFLICT" and both["negative"]["supported"] and both["positive"]["supported"]
++    update(state, f":withdraw {answer['observation']}\n")
++    assert read(state, "proof ready(17)")["results"][0]["status"] == "NEGATIVE"
++    update(state, ":withdraw contrary\n")
++    reopened, = read(state, "question_feed 0 16")["results"]
++    assert reopened["id"] == ticket and reopened["status"] == "open"
++    assert read(state, "proof ready(17)")["results"][0]["status"] == "UNKNOWN"
++    resident = Resident(state)
++    assert resident.start["actor"] == actor and resident.send("read", key)["status"] == "withdrawn"
++    before = state.read_bytes()
++    retry = resident.send("approval", f"answer {actor} {resident.start['head_sha256']} {ticket} {request} inspection {frozen}")
++    assert not retry["writes_state"] and state.read_bytes() == before
++    resident.close()
++    print("PASS resident: unsolicited start, separate approval, lost enrollment ACK/SIGKILL, exact read-only recovery, one ticket")
++    print("PASS evidence: independent native CL freeze, same-process answer, reschedule, four proof states, withdrawn replay")
++
++    partial = root / "partial"
++    run(pcgm, "--init-managed", source, partial, wire=b":observe calibration_seen calibration(alpha)\n")
++    expect_agenda(partial, "no_distinguishing_gap")
++    update(partial, ":observe permission allowed(alpha)\n")
++    review = expect_agenda(partial, "pending_approval", "calibrated", "alpha")
++    assert review["proposed_review"]["investigation"]["premise"]["predicate"] == "measured"
++    resident = Resident(partial)
++    enrolled = resident.send("approval", "enroll_agenda " + permit(review))
++    assert enrolled["next_agenda"]["reason"] == "already_ticketed"
++    resident.close()
++    update(partial, ":observe doubt !allowed(alpha)\n")
++    expect_agenda(partial, "contested_dependencies")
++    assert read(partial, "question " + enrolled["ticket"])["results"][0]["status"] == "superseded"
++    update(partial, ":withdraw doubt\n")
++    update(partial, ":withdraw permission\n")
++    expect_agenda(partial, "no_distinguishing_gap")
++    assert read(partial, "question " + enrolled["ticket"])["results"][0]["status"] == "superseded"
++    update(partial, ":restore permission\n")
++    reusable, = read(partial, "question_feed 0 16")["results"]
++    assert reusable["status"] == "open" and reusable["id"] == enrolled["ticket"]
++    large = root / "many"
++    run(pcgm, "--init-managed", source, large, wire="".join(f":observe a{i} arrival(item{i})\n" for i in range(17)).encode())
++    limited = expect_agenda(large, "scan_truncated")
++    assert not limited["search_complete"] and limited["eligible_count"] is None and limited["limit"] == "grounded_targets"
++    assert not read(large, "question_feed 0 16")["results"]
++    print("PASS partial support recomputes a distinguishing gap; withdrawal and bounded scan publish no approval")
+diff --git a/pcgm-src/anchored-enrollment.inc b/pcgm-src/anchored-enrollment.inc
+index a3ebf3e244e1eb6e8748442d0ed1c3b8b665189d..b2887a1ce9abd579e409e8e7a78d30f2bf401e01 100644
+--- a/pcgm-src/anchored-enrollment.inc
++++ b/pcgm-src/anchored-enrollment.inc
+@@ -1,13 +1,18 @@
+-string enroll_anchored_review(StateStore& store,const string& approval,const string& signal){
++string enroll_anchored_review(StateStore& store,const string& approval,const string& signal,bool agenda=false){
+     const auto digest=[](const string& s){return s.size()==64&&hex_chars(s);};
+     require(approval.size()<=1024&&digest(signal)&&sha256(approval)==signal,"local question approval pin mismatch");
+     istringstream in(approval);
+     string schema,actor,head,from,to,review,extra;
+-    require(bool(in>>schema>>actor>>head>>from>>to>>review)&&!(in>>extra)&&
+-        schema=="PCGM-LOCAL-OBLIGATION-APPROVAL-1"&&actor.size()==32&&hex_chars(actor)&&digest(head)&&digest(review)&&
+-        approval==schema+"\n"+actor+"\n"+head+"\n"+from+" "+to+"\n"+review+"\n",
+-        "invalid canonical local obligation approval");
+-    for(const auto& name:{from,to}){Parser p{name};require(p.name()==name,"invalid approval route");p.end();}
++    if(agenda){
++        require(bool(in>>schema>>actor>>head>>review)&&!(in>>extra)&&approval==agenda_approval(actor,head,review),
++                "invalid canonical local agenda approval");
++    }else{
++        require(bool(in>>schema>>actor>>head>>from>>to>>review)&&!(in>>extra)&&
++            schema=="PCGM-LOCAL-OBLIGATION-APPROVAL-1"&&actor.size()==32&&hex_chars(actor)&&digest(head)&&digest(review)&&
++            approval==schema+"\n"+actor+"\n"+head+"\n"+from+" "+to+"\n"+review+"\n",
++            "invalid canonical local obligation approval");
++        for(const auto& name:{from,to}){Parser p{name};require(p.name()==name,"invalid approval route");p.end();}
++    }
+     string current_head;
+     auto current=store.load(&current_head);
+     require(current.id==actor&&current.owner==build_name&&current.owner_hash==local_binary_hash()&&
+@@ -25,14 +30,20 @@ string enroll_anchored_review(StateStore& store,const string& approval,const str
+     }
+     require(current_head==head,"local obligation approval is stale");
+     optional<pair<Atom,Atom>> selected;
+-    const auto recomputed=anchored_goal_obligation(current,head,from,to,&selected);
++    string recomputed;
++    if(agenda){
++        const auto scan=discover_agenda(current,head);
++        require(scan.limit.empty()&&scan.eligible.size()==1,"agenda no longer has one complete selection");
++        selected=scan.choice;
++        recomputed=scan.review;
++    }else recomputed=anchored_goal_obligation(current,head,from,to,&selected);
+     require(selected&&sha256(recomputed)==review,"local approval does not match current grounded review");
+     const auto& [goal,need]=*selected;
+     const auto old_program=compile_active(current);
+     const auto old_facts=run(old_program,current.inactive);
+-    require(!old_program.goals.contains(goal),"grounded obligation goal already registered");
++    require(agenda||!old_program.goals.contains(goal),"grounded obligation goal already registered");
+     for(const auto& [_,q]:current.questions)require(!matches_question(q,need),"grounded premise already has a question");
+-    current.source+="\n? "+show(goal)+".\n";
++    if(!old_program.goals.contains(goal))current.source+="\n? "+show(goal)+".\n";
+     const auto next_program=compile_active(current);
+     auto goals=old_program.goals;goals.insert(goal);
+     const auto next_facts=run(next_program,current.inactive);
+@@ -41,6 +52,7 @@ string enroll_anchored_review(StateStore& store,const string& approval,const str
+     })&&open_gaps(next_program,next_facts).contains({goal,need}),"obligation enrollment would change facts or is no longer open");
+     const auto ticket="q"+to_string(current.events.size()+1);
+     require(stage_questions(current,{{goal,need}})==1,"obligation enrollment did not stage exactly one question");
++    current.questions.at(ticket).agenda=agenda;
+     current.events.push_back("obligation_enrolled "+signal+" "+review+" "+head+" "+ticket);
+     require(current.obligation_enrollments.emplace(signal,tuple{review,head,ticket}).second,"duplicate obligation enrollment");
+     const auto after=sha256(encode(current));
+diff --git a/pcgm-src/bounded-repair.inc b/pcgm-src/bounded-repair.inc
+new file mode 100644
+index 0000000000000000000000000000000000000000..c8c306f0a72b6675eb08ac79fd0ee3e1200b95f4
+--- /dev/null
++++ b/pcgm-src/bounded-repair.inc
+@@ -0,0 +1,252 @@
++// A host tick carries no rule text, observations or preferred winner. Authority
++// for each unary rule is the program's existing @ schema. All trials are copies.
++string repair_rule(const Rule& rule){
++    string text=show(rule.head);
++    for(size_t i=0;i<rule.body.size();++i)text+=(i?" & ":" <- ")+show(rule.body[i]);
++    return text+".\n";
++}
++
++string repair_cl_check(const Program& p,const Table& table,const set<string>& inactive,const set<Atom>& goals){
++    require(!goals.empty()&&goals.size()<=32,"repair check needs 1..32 distinct cases");
++    SliceStats sizes;
++    const auto slice=query_slice(p,{goals.begin(),goals.end()},sizes);
++    require(slice.live_guards.empty()&&sizes.rules<=128&&sizes.observations<=512,
++            "repair check exceeds independent CL proof scope");
++    string source;
++    for(const auto& [name,types]:slice.signatures){
++        source+=": "+name+"(";
++        for(size_t i=0;i<types.size();++i)source+=(i?",":"")+type_text(types[i]);
++        source+=").\n";
++    }
++    for(const auto& rule:slice.rules)source+=repair_rule(rule);
++    for(const auto& [id,fact]:slice.observations)
++        if(!inactive.contains(id))source+="& "+id+" "+show(fact)+".\n";
++    vector<string> expected;
++    for(const auto& goal:goals){
++        source+="? "+show(goal)+".\n";
++        expected.push_back(truth_state(table,goal));
++    }
++    require(cl_native::checked_repair_statuses(source)==expected,"CL and PCGM repair proofs differ");
++    return sha256(source);
++}
++
++struct RepairEvidence {
++    string rule,reference_pin;
++    set<string> witnesses,origins;
++};
++
++void repair_origins(const Table& table,const Atom& root,RepairEvidence& evidence){
++    set<Atom> seen;
++    vector<Atom> queue{root};
++    for(size_t i=0;i<queue.size();++i){
++        const auto fact=queue.at(i);
++        if(!seen.insert(fact).second)continue;
++        const auto& proof=table.facts.at(fact);
++        evidence.origins.insert(proof.origin);
++        require(seen.size()<=64&&evidence.origins.size()<=64,"repair witness proof exceeds budget");
++        queue.insert(queue.end(),proof.parents.begin(),proof.parents.end());
++    }
++}
++
++// Preserve both signs of a real held-out negative case. Wishes measure
++// improvement, while independent hard cases and the output boundary can veto it.
++set<Atom> repair_cases(const Program& p,const Table& before,const string& output){
++    set<Atom> goals;
++    bool negative=false,positive=false;
++    for(const auto& pref:p.preferences){
++        if(pref.when&&!proof_without_conflict(before,*pref.when))continue;
++        goals.insert(pref.proposition);
++        if(pref.proposition.pred!=output)continue;
++        negative|=pref.hard&&pref.expected=="NEGATIVE"&&
++                  before.facts.contains(opposite_of(pref.proposition));
++        positive|=!pref.hard&&pref.expected=="POSITIVE";
++    }
++    require(negative&&positive,"repair scope needs active positive cases and a signed hard negative control");
++    return goals;
++}
++
++void repair_validate(Option& option,RepairEvidence& evidence,Continuity next,const Program& p,
++                     const Table& before,const string& output){
++    auto candidate=compile_active(next);
++    auto after=run(candidate,next.inactive);
++    const auto delta=changes(p,before,after);
++    require(delta.added.size()+delta.removed.size()<=64,"repair changes more than 64 facts");
++    for(const auto* changed:{&delta.added,&delta.removed})for(const auto& fact:*changed)
++        require(base_name(fact)==output,"repair affects predicates beyond its authorized output");
++    evidence.reference_pin=repair_cl_check(candidate,after,next.inactive,repair_cases(p,before,output));
++    score(option,p,before,after);
++    // A candidate must not introduce unreviewed conflicts outside the fixed
++    // preference examples, even when every named positive and negative passes.
++    for(const auto& fact:delta.added)if(after.facts.contains(opposite_of(fact)))
++        option.error="candidate introduces opposing support for "+show(fact);
++    option.state=move(next);option.program=move(candidate);option.table=move(after);
++}
++
++const string repair_marker="# pcgm bounded repair v1 ";
++bool repair_terminal_output(const Program& p,const string& output){
++    for(const auto* prefix:{"gen_","ir_","geom_"})if(output.starts_with(prefix))return false;
++    if(output=="outcome"||output=="measured_outcome")return false;
++    for(const auto& rule:p.rules)for(const auto& term:rule.body){
++        if(sealed_calculation(term.pred)&&term.args.at(0)==output)return false;
++        if(!comparison(term.pred)&&base_name(term)==output)return false;
++    }
++    for(const auto& [_,guard]:p.live_guards)if(guard==output)return false;
++    for(const auto& schema:p.schemas)if(schema.premise==output||schema.trigger==output)return false;
++    for(const auto& pref:p.preferences)if(pref.when&&base_name(*pref.when)==output)return false;
++    for(const auto& [_,condition]:p.experience_contexts)if(base_name(condition)==output)return false;
++    for(const auto* policies:{&p.sensor_policy,&p.synth_policy,&p.multi_policy})
++        for(const auto& [_,inputs]:*policies)if(inputs.contains(output)||inputs.contains("!"+output))return false;
++    return true;
++}
++void repair_rewrite(Option& o,RepairEvidence& evidence,const Continuity& state,const Program& p,
++                    const Table& table,const Schema& schema){
++    require(p.signatures.contains(schema.result)&&p.signatures.contains(schema.premise)&&
++            p.signatures.contains(schema.trigger),"repair requires explicit unary signatures");
++    const Rule rule{{schema.result,{"$x"}},{{schema.premise,{"$x"}}}};
++    evidence.rule=repair_rule(rule);
++    require(repair_terminal_output(p,schema.result),"repair output is an input to downstream rules or runtime policy");
++    require(ranges::find(p.rules,rule)==p.rules.end(),"authorized rule already active");
++    // Discover repeated subjects from live trigger evidence. A new subject need
++    // not be listed in the host's frozen validation cases or registered goals.
++    for(const auto& [trigger,_]:table.facts){
++        if(trigger.pred!=schema.trigger)continue;
++        const Atom goal{schema.result,trigger.args},premise{schema.premise,trigger.args};
++        if(truth_state(table,goal)!="UNKNOWN")continue;
++        if(!proof_without_conflict(table,trigger)||!proof_without_conflict(table,premise))continue;
++        evidence.witnesses.insert(show(goal));
++        require(evidence.witnesses.size()<=32,"repair exceeds 32 distinct stalled cases");
++        repair_origins(table,trigger,evidence);
++        repair_origins(table,premise,evidence);
++    }
++    require(evidence.witnesses.size()>=2,"fewer than two distinct unresolved cases with clean trigger and premise");
++    string patch=repair_marker+schema.result+"\n";
++    for(const auto& witness:evidence.witnesses)patch+="# unresolved "+witness+"\n";
++    for(const auto& origin:evidence.origins)patch+="# support "+origin+"\n";
++    patch+=evidence.rule;
++    require(patch.size()<=16384&&state.plans.size()<128,"repair proposal exceeds plan budget");
++    auto next=state;
++    o.revision="p"+to_string(next.events.size()+1);
++    const auto base=revision_snapshot(state);
++    const auto pos=next.source.size();
++    next.events.push_back("proposal "+base+" "+to_hex(patch));
++    next.events.push_back("apply "+o.revision+" "+to_string(pos));
++    next.plans.emplace(o.revision,RevisionPlan{base,patch,pos,true,false});
++    next.active_revisions.push_back(o.revision);
++    next.source+="\n"+patch;
++    ++next.epoch;
++    repair_validate(o,evidence,move(next),p,table,schema.result);
++}
++
++void repair_rollback(Option& o,RepairEvidence& evidence,const Continuity& state,const Program& p,
++                     const Table& table){
++    require(!state.active_revisions.empty(),"no active bounded repair");
++    auto next=state;
++    o.revision=next.active_revisions.back();
++    auto& plan=next.plans.at(o.revision);
++    require(plan.patch.starts_with(repair_marker),"latest revision is outside the bounded repair scope");
++    const auto end=plan.patch.find('\n');
++    const auto output=plan.patch.substr(repair_marker.size(),end-repair_marker.size());
++    const auto schema=ranges::find_if(p.schemas,[&](const auto& item){
++        const string text=item.result+"($x) <- "+item.premise+"($x).\n";
++        return item.result==output&&plan.patch.ends_with(text);
++    });
++    require(schema!=p.schemas.end(),"rollback output is outside the active repair policy");
++    evidence.rule=output+"($x) <- "+schema->premise+"($x).\n";
++    expect_patch(next,plan);
++    next.source.erase(plan.offset,plan.patch.size()+1);
++    plan.reverted=true;
++    next.active_revisions.pop_back();
++    next.events.push_back("revert "+o.revision);
++    ++next.epoch;
++    repair_validate(o,evidence,move(next),p,table,output);
++}
++
++// Evaluate both signs of the first exact missing input. Neither branch can
++// authorize a write. An accepted answer on the independent host pipe changes
++// the basis and the next tick scores the actual evidence.
++string repair_knowledge(Option& option,const Continuity& state,const Program& p,const Table& table){
++    auto focus=p;
++    focus.goals.clear();
++    for(const auto& pref:p.preferences)
++        if(!pref.hard&&truth_state(table,pref.proposition)=="UNKNOWN"&&
++           (!pref.when||proof_without_conflict(table,*pref.when)))focus.goals.insert(pref.proposition);
++    bool complete=true;
++    const auto gaps=missing_inputs(focus,table,nullptr,&complete);
++    option.error=complete?"no exact missing input in current cases":"incomplete missing-input scan";
++    if(!complete||gaps.empty())return "null";
++    const auto& [goal,premise]=gaps.front();
++    option.error="requires an independently approved evidence answer";
++    ostringstream out;
++    out<<"{\"goal\":";json_atom(out,goal);out<<",\"premise\":";json_atom(out,premise);
++    out<<",\"gap_count\":"<<gaps.size()<<",\"ticket\":";
++    auto ticket=ranges::find_if(state.questions,[&](const auto& row){return matches_question(row.second,premise);});
++    if(ticket==state.questions.end())out<<"null";else out<<quote_json(ticket->first);
++    out<<",\"hypotheses\":[";
++    for(size_t n=0;n<2;++n){
++        auto branch=p;
++        const string id="repair_trial_"+sha256(show(premise)).substr(0,24);
++        require(!branch.observations.contains(id)&&!state.inactive.contains(id),"repair trial tag collision");
++        branch.observations.emplace(id,n?opposite_of(premise):premise);
++        const auto after=run(branch,state.inactive);
++        Option evaluation("knowledge");
++        score(evaluation,p,table,after);
++        if(n)out<<',';
++        out<<"{\"polarity\":"<<quote_json(n?"negative":"positive")<<",\"status\":"<<quote_json(truth_state(after,goal))
++           <<",\"wishes\":"<<evaluation.wishes<<",\"hard_cases_pass\":"<<(evaluation.error.empty()?"true":"false")<<"}";
++    }
++    return out.str()+"],\"writes_state\":false}";
++}
++
++string bounded_repair(StateStore& store,Continuity& state,Program& p,Table& table,bool execute){
++    require(!p.schemas.empty()&&p.schemas.size()<=8,"bounded repair needs 1..8 locally authorized @ schemas");
++    require(p.preferences.size()<=32,"repair criterion budget exceeded");
++    vector<Option> options;
++    for(const auto* kind:{"stay","knowledge","rollback"})options.emplace_back(kind);
++    vector<RepairEvidence> evidence(3);
++    score(options.front(),p,table,table);
++    string knowledge="null";
++    try{knowledge=repair_knowledge(options[1],state,p,table);}
++    catch(const runtime_error& error){options[1].error=error.what();}
++    try{repair_rollback(options[2],evidence[2],state,p,table);}
++    catch(const runtime_error& error){options[2].error=error.what();}
++    for(const auto& schema:p.schemas){
++        options.emplace_back("rewrite");evidence.emplace_back();
++        try{repair_rewrite(options.back(),evidence.back(),state,p,table,schema);}
++        catch(const runtime_error& error){options.back().error=error.what();}
++    }
++    const auto chosen=best_choice(options);
++    const bool write=execute&&chosen&&options[*chosen].name!="stay";
++    const auto decision=render_decision(state,options,chosen,write,"bounded_repair_v1");
++    const auto head=sha256(encode(state));
++    string event;
++    if(write){
++        auto& best=options.at(*chosen);
++        auto& next=*best.state;
++        next.events.push_back("decision "+best.name+" "+best.revision+" "+revision_snapshot(state)+" "+
++                              to_string(best.wishes)+" "+to_string(best.risk)+" "+to_string(best.changes));
++        event="e"+to_string(next.events.size());
++        record_experience_context(next,p,table);
++        retain_decision(next,event,decision);
++        add_notices(next,table,*best.table);
++        store.save(next);
++        state=move(next);p=move(*best.program);table=move(*best.table);
++    }
++    ostringstream out;
++    out<<"{\"schema\":\"pcgm-bounded-repair-v1\",\"actor\":"<<quote_json(state.id)
++       <<",\"basis_sha256\":"<<quote_json(head)<<",\"head_sha256\":"<<quote_json(sha256(encode(state)))
++       <<",\"decision_event\":"<<(event.empty()?"null":quote_json(event))<<",\"writes_state\":"<<(write?"true":"false")
++       <<",\"decision\":"<<decision<<",\"knowledge_review\":"<<knowledge<<",\"rule_reviews\":[";
++    for(size_t i=2;i<options.size();++i){
++        if(i!=2)out<<',';
++        const auto& record=evidence[i];
++        out<<"{\"option_index\":"<<i<<",\"rule\":"<<quote_json(record.rule)
++           <<",\"compiled_cl_slice_sha256\":"<<(record.reference_pin.empty()?"null":quote_json(record.reference_pin))
++           <<",\"stalled_cases\":[";
++        bool first=true;
++        for(const auto& witness:record.witnesses){if(!first)out<<',';out<<quote_json(witness);first=false;}
++        out<<"],\"proof_origins\":[";first=true;
++        for(const auto& origin:record.origins){if(!first)out<<',';out<<quote_json(origin);first=false;}
++        out<<"]}";
++    }
++    return out.str()+"]}";
++}
+diff --git a/pcgm-src/cl.cpp b/pcgm-src/cl.cpp
+index 8e0c4d208757b2cd1dd304620fe5bbd255cc4820..38419a77256b701f92281fe8e4ee0c65102dfe2a 100644
+--- a/pcgm-src/cl.cpp
++++ b/pcgm-src/cl.cpp
+@@ -83,7 +83,7 @@ struct Program {
+ struct Proof { string origin; vector<Atom> parents; vector<Atom> checks; string identity; };
+ string sha256(const string& input);
+ struct Table { map<Atom,Proof> facts; };
+-bool proof_without_conflict(const Table&,const Atom&);
++bool proof_without_conflict(const Table&,const Atom&,bool* limited=nullptr);
+ bool variable(const string& x) { return x.starts_with('$'); }
+ string show(const Atom& a) {
+     string out = a.pred + "(";
+@@ -557,6 +557,13 @@ Program compile(const string& src) {
+     validate_closed_folds(p);
+     return p;
+ }
++string rule_origin_id(const Program& p,size_t i){
++    const auto& rule=p.rules.at(i);
++    string material="PCGM-ORIGIN-2\n"+p.rule_labels.at(i)+"\n"+show(rule.head)+"\n";
++    for(const auto& term:rule.body)material+=show(term)+"\n";
++    if(const auto guard=p.live_guards.find(i);guard!=p.live_guards.end())material+="guard="+guard->second+"\n";
++    return sha256(material);
++}
+ Table run(const Program& p,const set<string>& inactive = {},const Table* guard_base=nullptr,JoinWork* work=nullptr) {
+     if(!guard_base&&!p.live_guards.empty()){
+         auto ordinary=p;
+@@ -578,13 +585,7 @@ Table run(const Program& p,const set<string>& inactive = {},const Table* guard_b
+     };
+     vector<string> stable_origins;
+     stable_origins.reserve(p.rules.size());
+-    for(size_t i=0;i<p.rules.size();++i){
+-        const auto& rule=p.rules[i];
+-        string material="PCGM-ORIGIN-2\n"+p.rule_labels.at(i)+"\n"+show(rule.head)+"\n";
+-        for(const auto& term:rule.body)material+=show(term)+"\n";
+-        if(const auto guard=p.live_guards.find(i);guard!=p.live_guards.end())material+="guard="+guard->second+"\n";
+-        stable_origins.push_back(sha256(material));
+-    }
++    for(size_t i=0;i<p.rules.size();++i)stable_origins.push_back(rule_origin_id(p,i));
+     for(const auto& [id,a]:p.observations)
+         if(!inactive.contains(id)){
+             const auto loc=p.linked_origins.find(id), art=p.observation_labels.find(id);
+@@ -761,11 +762,14 @@ Atom opposite_of(Atom a){
+     a.pred=a.pred.starts_with("!")?a.pred.substr(1):"!"+a.pred;
+     return a;
+ }
+-string question_status(const LocalQuestion& q,const Table& t,const set<Why>& gaps){
++string agenda_ticket_context(const Continuity&,const Program&,const Table&,const LocalQuestion&);
++string question_status(const LocalQuestion& q,const Table& t,const set<Why>& gaps,const Continuity& state,const Program* program){
+     const bool yes=t.facts.contains(q.fact), no=t.facts.contains(opposite_of(q.fact));
+     if(yes)return no?"conflicted":"answered";
+     if(no)return "opposed";
+-    return gaps.contains({q.goal,q.fact})?"open":"superseded";
++    if(!gaps.contains({q.goal,q.fact}))return "superseded";
++    if(q.agenda&&(!program||agenda_ticket_context(state,*program,t,q).empty()))return "superseded";
++    return "open";
+ }
+ pair<bool,bool> criteria_question_origin(const Program& p,const Atom& goal){
+     bool guard=false,objective=false;
+@@ -843,6 +847,7 @@ bool matches_question(const LocalQuestion& q,const Atom& f){
+ #include "resident-obligation.inc"
+ #include "quantity-question.inc"
+ #include "choice-capsule.inc"
++#include "bounded-repair.inc"
+ 
+ int main(int argc,char** argv) {
+     try {
+@@ -892,13 +897,13 @@ int main(int argc,char** argv) {
+             return serve_fifo_reader(argv[2],argv[3],argc==5?sequence_number(argv[4]):2);
+ 
+         if(argc==2&&string(argv[1])=="--ask-basic-arithmetic")return quantity_question_channel();
+-        if(argc>=2&&string(argv[1])=="--resume-obligation-local"){
++        if(argc>=2&&(string(argv[1])=="--resume-obligation-local"||string(argv[1])=="--resume-agenda-local")){
+             require(argc==4,"resident obligation expects STATE APPROVAL_FD");
+             const auto fd=sequence_number(argv[3]);
+             require(fd<=numeric_limits<int>::max(),"resident approval fd out of range");
+             const auto state_path=fs::absolute(argv[2]);
+             StateStore writer(fs::canonical(state_path.parent_path())/state_path.filename(),true);
+-            return resident_obligation(writer,static_cast<int>(fd));
++            return resident_obligation(writer,static_cast<int>(fd),string(argv[1])=="--resume-agenda-local");
+         }
+         if(argc>=2&&string(argv[1])=="--enroll-anchored-obligation"){
+             require(argc==5,"obligation enrollment expects STATE APPROVAL APPROVAL_SHA256");
+@@ -1599,7 +1604,10 @@ int main(int argc,char** argv) {
+                     require(next.dialogues.size()<16||next.dialogues.contains(turn.sid),"dialogue session limit");
+                     auto& session=next.dialogues[turn.sid];
+                     require(session.turns.size()<256,"dialogue turn limit");
+-                    const auto reply=make_reply(turn,session,epoch,table,state.observation_version);
++                    const auto reply=turn.action=="outcome"&&session.focus?
++                        reasoned_outcome(*store,state,sha256(encode(state)),turn.sid,*session.focus,turn.basis_pin,epoch,table)+"\n":
++                        make_reply(turn,session,epoch,table,state.observation_version);
++                    require(reply.size()<=16384,"outcome exceeds dialogue receipt limit; use the reasoned_outcome read operation");
+                     session.turns.emplace(turn.tid,LocalTurn{turn.canonical,reply});
+                     session.order.push_back(turn.tid);
+                     next.events.push_back("dialogue "+turn.sid+" "+turn.tid+" "+to_hex(turn.canonical)+" "+
+@@ -1909,7 +1917,7 @@ int main(int argc,char** argv) {
+                         cout<<"workspace_evidence_unchanged "<<ticket<<" "<<id<<" sha256="<<proof<<'\n';continue;
+                     }
+                     require(!epoch.observations.contains(id),"workspace evidence observation ID already exists");
+-                    const auto status=question_status(q->second,table,open_gaps(epoch,table));
++                    const auto status=question_status(q->second,table,open_gaps(epoch,table),state,&epoch);
+                     require(status=="open"&&question_pin(state,ticket,q->second,status,&epoch,&table)==request,
+                             "workspace proof question has a stale request address");
+                     const auto raw=native_os::read_confined_component(store->dst.parent_path()/"incoming",member+".clw",16*1024*1024,{
+@@ -1970,7 +1978,7 @@ int main(int argc,char** argv) {
+                         continue;
+                     }
+                     require(!epoch.observations.contains(id),"CL evidence observation ID already exists");
+-                    const auto status=question_status(q->second,table,open_gaps(epoch,table));
++                    const auto status=question_status(q->second,table,open_gaps(epoch,table),state,&epoch);
+                     require(status=="open"&&question_pin(state,ticket,q->second,status,&epoch,&table)==request,
+                             "question is no longer open at supplied request pin");
+                     const auto bytes=native_os::read_confined_component(store->dst.parent_path()/"incoming",member+".clpkg",2*1024*1024,{
+@@ -2040,7 +2048,7 @@ int main(int argc,char** argv) {
+                         continue;
+                     }
+                     require(!epoch.observations.contains(id),"answer observation ID already exists");
+-                    const auto current=question_status(q->second,table,open_gaps(epoch,table));
++                    const auto current=question_status(q->second,table,open_gaps(epoch,table),state,&epoch);
+                     require(current=="open"&&question_pin(state,packet.ticket,q->second,current,&epoch,&table)==packet.pin,
+                             "question is no longer open at the supplied request pin");
+                     auto next=state;
+@@ -2095,7 +2103,7 @@ int main(int argc,char** argv) {
+                         continue;
+                     }
+                     if(answering){
+-                        const auto status=question_status(state.questions.at(ticket),table,open_gaps(epoch,table));
++                        const auto status=question_status(state.questions.at(ticket),table,open_gaps(epoch,table),state,&epoch);
+                         require(status=="open"||status=="opposed"||status=="conflicted",
+                                 "question no longer awaiting evidence");
+                     }
+@@ -2115,7 +2123,7 @@ int main(int argc,char** argv) {
+                     epoch=std::move(next);
+                     table=std::move(checked);
+                     cout<<"observation_version="<<state.observation_version<<" observed "<<id<<'\n';
+-                    if(answering)cout<<"answer "<<ticket<<" "<<question_status(state.questions.at(ticket),table,open_gaps(epoch,table))<<'\n';
++                    if(answering)cout<<"answer "<<ticket<<" "<<question_status(state.questions.at(ticket),table,open_gaps(epoch,table),state,&epoch)<<'\n';
+                     continue;
+                 }
+                 if(line.starts_with(":withdraw ") || line.starts_with(":restore ")){
+@@ -2193,7 +2201,7 @@ int main(int argc,char** argv) {
+                         cout<<"questions_created "<<created<<'\n';
+                     }
+                     for(const auto& [id,q]:state.questions){
+-                        cout<<"question "<<id<<" "<<question_status(q,table,gaps)<<" "
++                        cout<<"question "<<id<<" "<<question_status(q,table,gaps,state,&epoch)<<" "
+                             <<show(q.goal)<<" needs "<<show(q.fact)<<'\n';
+                     }
+                     cout<<"questions_end count="<<state.questions.size()<<'\n';
+@@ -2543,6 +2551,12 @@ int main(int argc,char** argv) {
+                              <<(execute?" committed":line.starts_with(":compare")?" preview":" unchanged")<<'\n';
+                     continue;
+                 }
++                if(line==":repair_compare"||line==":repair_step"){
++                    require(store&&state.owner==build_name&&!state.pending&&state.staged_copy.empty(),
++                            "bounded repair requires the active managed writer");
++                    cout<<bounded_repair(*store,state,epoch,table,line==":repair_step")<<'\n';
++                    continue;
++                }
+                 if(line==":plans"){
+                     require(store.has_value(),"persistent state not enabled");
+                     const auto base=revision_snapshot(state);
+diff --git a/pcgm-src/continuity.inc b/pcgm-src/continuity.inc
+index 57cbfd7dc6134e50a6da61916c2dfa439efc43f0..ff699b4d9fc2753172408728fae96f9c9257df5d 100644
+--- a/pcgm-src/continuity.inc
++++ b/pcgm-src/continuity.inc
+@@ -54,7 +54,7 @@ string from_hex(const string& s){
+ struct ScopeOrigin {string profile,report;};
+ struct RecipeOrigin {string recipe,scope,evidence;};
+ struct WorkspaceProofOrigin {string base,bytes;map<string,Atom> source_facts;};
+-struct LocalQuestion { Atom goal, fact; };
++struct LocalQuestion { Atom goal, fact; bool agenda=false; };
+ struct WireReceipt {string ticket,source,pin,packet;};
+ struct BundleReceipt {string ticket,request,package,proof;};
+ struct ChoiceOutcome {string basis,kind,receipt;};
+@@ -361,6 +361,7 @@ Continuity decode(const string& s){
+                 "invalid durable obligation enrollment");
+             require(c.obligation_enrollments.emplace(pin,tuple{review,head,ticket}).second,
+                 "duplicate durable obligation enrollment");
++            c.questions.at(ticket).agenda=sha256("PCGM-LOCAL-AGENDA-APPROVAL-1\n"+c.id+"\n"+head+"\n"+review+"\n")==pin;
+         }
+         else if(e.starts_with("cycle_response ")){
+             istringstream in(e.substr(15));string channel,sequence,packet,hex,extra;
+diff --git a/pcgm-src/dialogue.inc b/pcgm-src/dialogue.inc
+index a1085b394b9a46c8314c3e170d11aed9081c36bd..44d4a5b910125ec4ad61510772d6fc491eb76262 100644
+--- a/pcgm-src/dialogue.inc
++++ b/pcgm-src/dialogue.inc
+@@ -1,4 +1,4 @@
+-struct TurnInput { string sid,tid,action,canonical; optional<Atom> target; };
++struct TurnInput { string sid,tid,action,canonical; optional<Atom> target; string basis_pin; };
+ TurnInput interpret_turn(const string& input,const Program& program){
+     Parser p{input};
+     TurnInput q;
+@@ -9,6 +9,11 @@ TurnInput interpret_turn(const string& input,const Program& program){
+         require(program.goals.contains(a),"conversation target is not a declared goal");
+         q.canonical+=" "+show(a);
+         q.target=std::move(a);
++    }else if(q.action=="outcome"){
++        if(p.take("since")){
++            q.basis_pin=p.name();
++            q.canonical+=" since "+q.basis_pin;
++        }
+     }else require(q.action=="why"||q.action=="status"||q.action=="need"||q.action=="clear",
+                   "unknown dialogue command");
+     p.end();
+diff --git a/pcgm-src/frozen-admission.inc b/pcgm-src/frozen-admission.inc
+index 40166e7a173407769a371a2968c93a2c50f362f4..0f7537d2b787df3b250e6e85bae2df12f166ad9f 100644
+--- a/pcgm-src/frozen-admission.inc
++++ b/pcgm-src/frozen-admission.inc
+@@ -21,7 +21,7 @@ FrozenAdmission admit_frozen_exact(StateStore& store,Continuity& state,Program&
+         return {id,false};
+     }
+     require(!epoch.observations.contains(id),"frozen CL evidence observation ID already exists");
+-    const auto status=question_status(q->second,table,open_gaps(epoch,table));
++    const auto status=question_status(q->second,table,open_gaps(epoch,table),state,&epoch);
+     require(status=="open"&&question_pin(state,ticket,q->second,status,&epoch,&table)==request,
+             "frozen proof question has a stale request address");
+     const auto raw=native_os::read_confined_component(store.dst.parent_path()/"incoming",member+".clef",5*1024*1024,{
+diff --git a/pcgm-src/goal-obligation.inc b/pcgm-src/goal-obligation.inc
+index 803ac1ec0f35e191460c92091a2b07fb1e6b2b97..2f2841bf5cda0be271f27b8d884877016c851c80 100644
+--- a/pcgm-src/goal-obligation.inc
++++ b/pcgm-src/goal-obligation.inc
+@@ -1,7 +1,7 @@
+-string goal_obligation(const Continuity& state,const string& revision,const Atom& target,bool ephemeral=false,bool* eligible=nullptr,bool* uncertain=nullptr,Atom* chosen_premise=nullptr){
++string compiled_goal_obligation(const Continuity& state,const Program& native,const string& revision,const Atom& target,bool ephemeral,bool* eligible,bool* uncertain,Atom* chosen_premise,bool* clean_branches=nullptr){
+     if(eligible)*eligible=false;
+     if(uncertain)*uncertain=false;
+-    const auto native=compile_active(state);
++    if(clean_branches)*clean_branches=true;
+     validate_time_query(native,target);
+     require((ephemeral||native.goals.contains(target))&&!target.pred.starts_with("!")&&
+             ranges::none_of(target.args,variable),"obligation needs a declared unsigned ground goal");
+@@ -40,6 +40,18 @@ string goal_obligation(const Continuity& state,const string& revision,const Atom
+             branch.observations.emplace(id,hypothetical);
+             const auto trial=run(branch,state.inactive);
+             outcome[n]={trial.facts.contains(target),trial.facts.contains(contrary_goal)};
++            // A clean grounding witness alone cannot clear a disputed *other*
++            // antecedent. Inspect both proof trees; opposite conclusions remain
++            // representable when their separate supporting chains are clean.
++            if(clean_branches)for(const auto& sign:{target,contrary_goal}){
++                const auto result=trial.facts.find(sign);
++                if(result==trial.facts.end())continue;
++                for(const auto& parent:result->second.parents){
++                    bool limited=false;
++                    if(!proof_without_conflict(trial,parent,&limited))*clean_branches=false;
++                    if(limited&&uncertain)*uncertain=true;
++                }
++            }
+             out<<"{\"hypothesis\":";json_atom(out,hypothetical);
+             out<<",\"consequence\":";json_fact(out,trial,target);out<<'}';
+         }
+@@ -48,3 +60,6 @@ string goal_obligation(const Continuity& state,const string& revision,const Atom
+     }
+     return out.str()+",\"hypotheses_are_not_facts\":true,\"writes_state\":false,\"authorizes_action\":false,\"outbound\":false}";
+ }
++string goal_obligation(const Continuity& state,const string& revision,const Atom& target,bool ephemeral=false,bool* eligible=nullptr,bool* uncertain=nullptr,Atom* chosen_premise=nullptr){
++    return compiled_goal_obligation(state,compile_active(state),revision,target,ephemeral,eligible,uncertain,chosen_premise);
++}
+diff --git a/pcgm-src/question-wire.inc b/pcgm-src/question-wire.inc
+index 7f3e772f68b96395cc8d0d46cd137d7f5b0480b1..819bc9913a170908f37e570b591befc8577cce67 100644
+--- a/pcgm-src/question-wire.inc
++++ b/pcgm-src/question-wire.inc
+@@ -19,6 +19,12 @@ string question_pin(const Continuity& state,const string& ticket,const LocalQues
+                     const Program* program=nullptr,const Table* table=nullptr){
+     const auto guard=program&&table&&status=="open"?question_condition_context(*program,*table,q.goal):string{};
+     const string exact=state.id+"\n"+ticket+"\n"+show(q.goal)+"\n"+show(q.fact)+"\n"+status+"\n";
++    if(q.agenda&&status=="open"){
++        require(program&&table,"agenda question address requires its live dependency proof");
++        const auto context=agenda_ticket_context(state,*program,*table,q);
++        require(!context.empty(),"agenda question no longer has a distinguishing dependency");
++        return sha256("PCGM-AGENDA-QUESTION-1\n"+exact+context+"\n");
++    }
+     if(guard.empty())return sha256("PCGM-QUESTION-1\n"+exact);
+     return sha256("PCGM-QUESTION-2\n"+exact+guard+"\n");
+ }
+@@ -40,7 +46,7 @@ AnswerPacket decode_answer_packet(const string& bytes){
+     return {id,ticket,source,pin,fact};
+ }
+ string question_json(const Continuity& state,const string& ticket,const LocalQuestion& q,const Table& table,const set<Why>& gaps,const Program* program=nullptr){
+-    const auto status=question_status(q,table,gaps);
++    const auto status=question_status(q,table,gaps,state,program);
+     ostringstream out;
+     out<<"{\"id\":"<<quote_json(ticket)<<",\"status\":"<<quote_json(status)<<",\"request_sha256\":"
+        <<quote_json(question_pin(state,ticket,q,status,program,&table))<<",\"goal\":";
+@@ -95,7 +101,7 @@ string review_question_bundle(const fs::path& state_path,const string& ticket,co
+     require(item!=saved.questions.end(),"unknown question");
+     const auto active=compile_active(saved);
+     const auto answer=run(active,saved.inactive);
+-    const auto status=question_status(item->second,answer,open_gaps(active,answer));
++    const auto status=question_status(item->second,answer,open_gaps(active,answer),saved,&active);
+     require(status=="open"&&question_pin(saved,ticket,item->second,status,&active,&answer)==request_sha,
+             "question is no longer open at supplied request pin");
+     const auto image=native_os::read_regular_input(package,2*1024*1024,{
+@@ -119,7 +125,7 @@ string review_frozen_question(const fs::path& state,const string& ticket,const s
+     require(q!=current.questions.end(),"unknown question");
+     const auto program=compile_active(current);
+     const auto table=run(program,current.inactive);
+-    const auto status=question_status(q->second,table,open_gaps(program,table));
++    const auto status=question_status(q->second,table,open_gaps(program,table),current,&program);
+     require(status=="open"&&question_pin(current,ticket,q->second,status,&program,&table)==request,"frozen proof question has a stale request address");
+     const auto raw=native_os::read_regular_input(artifact,5*1024*1024,{"cannot open frozen proof directory","cannot open frozen proof",
+         "frozen proof must be a regular file","cannot read frozen proof","frozen proof exceeds size limit"});
+@@ -151,7 +157,7 @@ string review_workspace_question(const fs::path& state,const string& ticket,cons
+     require(q!=current.questions.end(),"unknown question");
+     const auto program=compile_active(current);
+     const auto table=run(program,current.inactive);
+-    const auto status=question_status(q->second,table,open_gaps(program,table));
++    const auto status=question_status(q->second,table,open_gaps(program,table),current,&program);
+     require(status=="open"&&question_pin(current,ticket,q->second,status,&program,&table)==request,
+             "workspace proof question has a stale request address");
+     const auto raw=native_os::read_regular_input(artifact,16*1024*1024,{"cannot open workspace proof directory",
+diff --git a/pcgm-src/read-channel.inc b/pcgm-src/read-channel.inc
+index a401b64be8a61821a6cabb07d77b84ff564ec426..0dd7954909afbbc0e252fb54e2b7e77032c23dd7 100644
+--- a/pcgm-src/read-channel.inc
++++ b/pcgm-src/read-channel.inc
+@@ -26,9 +26,11 @@ string request_digest(Parser& p){
+     return digest;
+ }
+ #include "read-chronicle.inc"
++#include "reasoned-outcome.inc"
+ #include "read-review.inc"
+ #include "goal-obligation.inc"
+ #include "anchored-goal-obligation.inc"
++#include "work-agenda.inc"
+ bool request_line(istream& in,string& out,bool& overflow){
+     out.clear();overflow=false;bool any=false;char c;size_t bytes=0;
+     while(in.get(c)){
+@@ -58,15 +60,17 @@ int read_channel(const fs::path& state_path,istream& input=cin,ostream& output=c
+             Parser p{line};
+             id=p.name();
+             const auto op=p.name();
+-            require(op=="anchored_obligation"||op=="obligation"||op=="status"||op=="proof"||op=="notices"||op=="inspect"||op=="decision"||op=="fingerprint"||op=="packages"||op=="slice"||op=="batch"||op=="generated"||op=="historical"||op=="timeline"||op=="archives"||op=="storage"||op=="storage_fresh"||op=="review"||op=="pinned_review"||op=="question"||op=="question_feed"||op=="choice_receipt"||op=="choice_intent"||op=="choice_basis"||op=="choice_option"||(op=="choice_reassess"||op=="choice_attribution")||op=="sensor_receipt"||op=="observation_batch"||op=="observation_batch_audit"||op=="workspace_proof"||op=="workspace_growth"||op=="learned_outcome"||op=="outcome_requests"||op=="measurement_history","unknown read operation");
++            require(op=="reasoned_outcome"||op=="agenda"||op=="anchored_obligation"||op=="obligation"||op=="status"||op=="proof"||op=="notices"||op=="inspect"||op=="decision"||op=="fingerprint"||op=="packages"||op=="slice"||op=="batch"||op=="generated"||op=="historical"||op=="timeline"||op=="archives"||op=="storage"||op=="storage_fresh"||op=="review"||op=="pinned_review"||op=="question"||op=="question_feed"||op=="choice_receipt"||op=="choice_intent"||op=="choice_basis"||op=="choice_option"||(op=="choice_reassess"||op=="choice_attribution")||op=="sensor_receipt"||op=="observation_batch"||op=="observation_batch_audit"||op=="workspace_proof"||op=="workspace_growth"||op=="learned_outcome"||op=="outcome_requests"||op=="measurement_history","unknown read operation");
+             string digest;
+             if(op=="storage_fresh")reader.archive_cache.clear();
+-            const auto s=reader.load((op=="anchored_obligation"||op=="obligation"||op=="inspect"||op=="proof"||op=="fingerprint"||op=="slice"||op=="batch"||op=="storage"||op=="storage_fresh"||op=="review"||op=="question"||op=="question_feed"||op=="choice_basis"||(op=="choice_reassess"||op=="choice_attribution"))?&digest:nullptr);
++            const auto s=reader.load((op=="reasoned_outcome"||op=="agenda"||op=="anchored_obligation"||op=="obligation"||op=="inspect"||op=="proof"||op=="fingerprint"||op=="slice"||op=="batch"||op=="storage"||op=="storage_fresh"||op=="review"||op=="question"||op=="question_feed"||op=="choice_basis"||(op=="choice_reassess"||op=="choice_attribution"))?&digest:nullptr);
+             require(s.id==individual,"state identity changed; restart read channel explicitly");
+             string payload;
+             if(op=="status"){
+                 p.end();
+                 payload=channel_status(s);
++            }else if(op=="agenda"){
++                p.end();payload=discover_agenda(s,digest).json(s,digest);
+             }else if(op=="anchored_obligation"){
+                 const auto revision=request_digest(p);
+                 require(!revision.empty()&&revision==digest,"anchored obligation revision no longer current");
+@@ -77,6 +81,13 @@ int read_channel(const fs::path& state_path,istream& input=cin,ostream& output=c
+                 require(!revision.empty()&&revision==digest,"obligation revision no longer current");
+                 const auto goal=p.atom();p.end();
+                 payload=goal_obligation(s,digest,goal);
++            }else if(op=="reasoned_outcome"){
++                const auto case_id=p.name();const auto goal=p.atom();
++                const auto basis=p.take("since")?p.name():string{};
++                p.end();
++                if(digest!=cached_digest){program=compile_active(s);table.reset();cached_digest=digest;}
++                if(!table)table=run(*program,s.inactive);
++                payload=reasoned_outcome(reader,s,digest,case_id,goal,basis,*program,*table);
+             }else if(op=="observation_batch_audit"){
+                 const auto item=p.name();
+                 const auto exact=request_digest(p);
+diff --git a/pcgm-src/reasoned-outcome.inc b/pcgm-src/reasoned-outcome.inc
+new file mode 100644
+index 0000000000000000000000000000000000000000..5c466955e14fff31d44fa772c6429e0a449421e7
+--- /dev/null
++++ b/pcgm-src/reasoned-outcome.inc
+@@ -0,0 +1,150 @@
++// Follow the two selected native witnesses. Stable rule identities survive
++// unrelated edits that only renumber source lines.
++struct OutcomeWitnesses {set<string> observations,rules;};
++OutcomeWitnesses outcome_witnesses(const Table& table,const Atom& goal){
++    OutcomeWitnesses refs;
++    vector<Atom> queue{goal,opposite_of(goal)};
++    set<Atom> seen;
++    for(size_t i=0;i<queue.size();++i){
++        const auto fact=queue[i];
++        const auto found=table.facts.find(fact);
++        if(found==table.facts.end()||!seen.insert(fact).second)continue;
++        const auto& proof=found->second;
++        if(proof.origin.starts_with("obs:")){
++            const auto ref=proof.origin.substr(4);
++            refs.observations.insert(ref.substr(0,ref.find('@')));
++        }else refs.rules.insert(proof.identity);
++        queue.insert(queue.end(),proof.parents.begin(),proof.parents.end());
++    }
++    return refs;
++}
++
++map<string,size_t> outcome_rules(const Program& program){
++    map<string,size_t> rules;
++    for(size_t i=0;i<program.rules.size();++i)rules.emplace(rule_origin_id(program,i),i);
++    return rules;
++}
++
++void outcome_rule_changes(ostream& out,const Program& scope,const Program& other,
++                          const OutcomeWitnesses& refs){
++    const auto known=outcome_rules(other);
++    bool comma=false;
++    out<<'[';
++    for(const auto& [digest,i]:outcome_rules(scope)){
++        if(known.contains(digest))continue;
++        const auto& r=scope.rules[i];
++        string cl=show(r.head)+" <- ";
++        for(size_t j=0;j<r.body.size();++j)cl+=(j?" & ":"")+show(r.body[j]);
++        if(comma)out<<',';
++        comma=true;
++        out<<"{\"origin_sha256\":"<<quote_json(digest)<<",\"rule\":"<<quote_json(cl+".")
++           <<",\"guard\":"<<(scope.live_guards.contains(i)?quote_json(scope.live_guards.at(i)):"null")
++           <<",\"in_witness\":"<<(refs.rules.contains(digest)?"true":"false")<<'}';
++    }
++    out<<']';
++}
++
++// This receipt compares two verified points of the same actor's history.
++// An observation in the predicate slice may concern a different argument.
++// For small changes, undo one observation in memory and rerun the same rules
++// to distinguish a causal change in truth from a concurrent edit.
++string outcome_effect(const StateStore& store,const Continuity& current,const string& head,
++                      const string& label,const Atom& goal,const Program& program,
++                      const Program& scope,const Table& actual){
++    const auto pin=current.pins.find(label);
++    require(pin!=current.pins.end(),"unknown outcome comparison pin");
++    const auto prior=verify_episode(store,current,pin->second);
++    const auto earlier=compile_active(prior);
++    validate_time_query(earlier,goal);
++    SliceStats stats;
++    const auto previous_scope=query_slice(earlier,{goal},stats);
++    const auto before=run(previous_scope,prior.inactive);
++    const auto before_refs=outcome_witnesses(before,goal),after_refs=outcome_witnesses(actual,goal);
++    const auto prior_status=truth_state(before,goal),status=truth_state(actual,goal);
++    const auto prior_proof=proof_digest(before,goal),proof=proof_digest(actual,goal);
++    ostringstream out;
++    out<<"{\"basis_revision\":"<<quote_json(pin->second.digest)<<",\"basis_event\":"<<pin->second.events
++       <<",\"state_revision\":"<<quote_json(head)<<",\"effect_point\":";
++    json_atom(out,goal);
++    out<<",\"before_status\":"<<quote_json(prior_status)<<",\"after_status\":"<<quote_json(status)
++       <<",\"conclusion_changed\":"<<(prior_status!=status?"true":"false")
++       <<",\"before_proof_sha256\":"<<quote_json(prior_proof)<<",\"after_proof_sha256\":"<<quote_json(proof)
++       <<",\"proof_changed\":"<<(prior_proof!=proof?"true":"false")<<",\"before_proof\":";
++    json_fact(out,before,goal);
++    set<string> ids;
++    for(const auto& [id,_]:scope.observations)ids.insert(id);
++    for(const auto& [id,_]:previous_scope.observations)ids.insert(id);
++    size_t changed=0;
++    out<<",\"observation_changes\":[";
++    const auto active=[](const Program& p,const Continuity& s,const string& id)->optional<Atom>{
++        const auto found=p.observations.find(id);
++        if(found==p.observations.end()||s.inactive.contains(id))return nullopt;
++        return found->second;
++    };
++    for(const auto& id:ids){
++        const auto old=active(earlier,prior,id),now=active(program,current,id);
++        if(old==now)continue;
++        if(changed++)out<<',';
++        out<<"{\"observation_id\":"<<quote_json(id)<<",\"before\":";
++        if(old)json_atom(out,*old);else out<<"null";
++        out<<",\"after\":";if(now)json_atom(out,*now);else out<<"null";
++        out<<",\"in_before_witness\":"<<(before_refs.observations.contains(id)?"true":"false")
++           <<",\"in_after_witness\":"<<(after_refs.observations.contains(id)?"true":"false")
++           <<",\"status_if_change_undone\":";
++        if(changed<=8&&scope.rules.size()<=256&&scope.observations.size()<=2048){
++            auto trial=scope;
++            auto inactive=current.inactive;
++            if(old){trial.observations[id]=*old;inactive.erase(id);}
++            else trial.observations.erase(id);
++            // A counterfactual can exceed the native evaluator's limits even
++            // when the two historical states are evaluable.
++            try{const auto result=run(trial,inactive);out<<quote_json(truth_state(result,goal));}
++            catch(const runtime_error&){out<<"null";}
++        }else out<<"null";
++        out<<'}';
++    }
++    out<<"],\"rules_added\":";outcome_rule_changes(out,scope,earlier,after_refs);
++    out<<",\"rules_removed\":";outcome_rule_changes(out,previous_scope,program,before_refs);
++    out<<",\"writes_state\":false}";
++    return out.str();
++}
++
++string reasoned_outcome(const StateStore& store,const Continuity& current,const string& revision,
++                        const string& case_id,const Atom& goal,const string& pin,
++                        const Program& program,const Table& table){
++    validate_time_query(program,goal);
++    SliceStats stats;
++    const auto scope=query_slice(program,{goal},stats);
++    bool complete=true;
++    const auto missing=missing_inputs(scope,table,nullptr,&complete);
++    ostringstream out;
++    out<<"{\"schema\":\"pcgm-reasoned-outcome-v1\",\"case_id\":"<<quote_json(case_id)
++       <<",\"source_id\":"<<quote_json(current.id)
++       <<",\"baseline_version\":\"source-sha256:9e456752f08769fb3757c21665587c847ec3104a87be7b4fb306bee892af2f31\""
++       <<",\"state_revision\":"<<quote_json(revision)<<",\"event\":"<<current.events.size()<<",\"goal\":";
++    json_atom(out,goal);
++    out<<",\"status\":"<<quote_json(truth_state(table,goal))<<",\"positive_proof\":";
++    json_branch(out,table,goal);out<<",\"negative_proof\":";json_branch(out,table,opposite_of(goal));
++    out<<",\"missing_scan_complete\":"<<(complete?"true":"false")<<",\"missing\":[";
++    for(size_t i=0;i<missing.size();++i){if(i)out<<',';json_atom(out,missing[i].second);}
++    vector<string> tickets;
++    for(const auto& [id,q]:current.questions)if(q.goal==goal)tickets.push_back(id);
++    out<<"],\"question_ticket\":";
++    if(tickets.size()==1)out<<quote_json(tickets.front());else out<<"null";
++    out<<",\"questions\":[";
++    if(!tickets.empty()){
++        const auto gaps=open_gaps(program,table);
++        for(size_t i=0;i<tickets.size();++i){
++            if(i)out<<',';
++            const auto& id=tickets[i];
++            out<<question_json(current,id,current.questions.at(id),table,gaps,&program);
++        }
++    }
++    out<<"],\"effect_receipt\":";
++    if(pin.empty())out<<"null";
++    else out<<outcome_effect(store,current,revision,pin,goal,program,scope,table);
++    out<<'}';
++    auto result=out.str();
++    require(result.size()<=2*1024*1024,"reasoned outcome exceeds read response budget");
++    return result;
++}
+diff --git a/pcgm-src/resident-obligation.inc b/pcgm-src/resident-obligation.inc
+index cc488782a9cc8ebdf8b0699a111352a8697ecb45..24c643ef233473a1e1da91c0d79747c4629e287c 100644
+--- a/pcgm-src/resident-obligation.inc
++++ b/pcgm-src/resident-obligation.inc
+@@ -1,7 +1,7 @@
+ /* Read requests and exact local approvals come from independently wired host pipes.
+  * A digest binds bytes, not an authority: only the host-provided approval pipe
+  * carries authority in this mode. No legacy commands or user-selected paths. */
+-int resident_obligation(StateStore& store,int approval_fd){
++int resident_obligation(StateStore& store,int approval_fd,bool schedule_agenda){
+     require(approval_fd>STDERR_FILENO,"resident approval requires a distinct inherited pipe");
+     struct stat input_stat{}, approval_stat{};
+     const auto flags=fcntl(approval_fd,F_GETFL);
+@@ -18,8 +18,17 @@ int resident_obligation(StateStore& store,int approval_fd){
+         return pair{move(state),move(head)};
+     };
+     const auto [initial,initial_head]=owned();
+-    cout<<unitbuf<<"{\"schema\":\"pcgm-resident-obligation-v2\",\"actor\":"<<quote_json(initial.id)
+-        <<",\"head_sha256\":"<<quote_json(initial_head)<<"}\n";
++    string last_scheduled=initial_head;
++    auto agenda_report=[](const Continuity& current,const string& head){
++        // A follow-up evaluation failure cannot turn a committed approval into a failed ACK.
++        try{return discover_agenda(current,head).json(current,head);}
++        catch(const exception& ex){return "{\"schema\":\"pcgm-work-agenda-error-v1\",\"actor\":"+quote_json(current.id)+
++            ",\"revision_sha256\":"+quote_json(head)+",\"error\":"+quote_json(ex.what())+",\"writes_state\":false}";}
++    };
++    cout<<unitbuf<<"{\"schema\":"<<quote_json(schedule_agenda?"pcgm-resident-agenda-v1":"pcgm-resident-obligation-v2")
++        <<",\"actor\":"<<quote_json(initial.id)<<",\"head_sha256\":"<<quote_json(initial_head);
++    if(schedule_agenda)cout<<",\"agenda\":"<<agenda_report(initial,initial_head);
++    cout<<"}\n";
+     struct Frame {string bytes;bool overflow=false;};
+     Frame frames[2];
+     pollfd pipes[2]={{STDIN_FILENO,POLLIN,0},{approval_fd,POLLIN,0}};
+@@ -30,7 +39,32 @@ int resident_obligation(StateStore& store,int approval_fd){
+             istringstream arg(row);
+             string op,actor,head,from,to,review,pin,extra,payload;
+             require(bool(arg>>op),"empty resident frame");
+-            if(!channel&&op=="review"){
++            if(schedule_agenda&&!channel&&op=="agenda"){
++                require(row==op,"expected agenda without a supplied target or route");
++                const auto [current,key]=owned();payload=agenda_report(current,key);
++            }else if(schedule_agenda&&((!channel&&op=="agenda_receipt")||(channel&&op=="enroll_agenda"))){
++                require(bool(arg>>actor>>head>>review>>pin)&&!(arg>>extra)&&
++                        row==op+" "+actor+" "+head+" "+review+" "+pin,"expected ACTOR HEAD REVIEW APPROVAL_SHA256");
++                const auto approval=agenda_approval(actor,head,review);
++                require(sha256(approval)==pin,"agenda approval pin mismatch");
++                if(channel){
++                    payload=enroll_anchored_review(store,approval,pin,true);payload.pop_back();
++                }else{
++                    const auto [current,key]=owned();
++                    require(current.id==actor,"agenda receipt addressed to another individual");
++                    const auto receipt=current.obligation_enrollments.find(pin);
++                    string ticket="null";
++                    if(receipt!=current.obligation_enrollments.end()){
++                        const auto& [proof,basis,id]=receipt->second;
++                        require(proof==review&&basis==head&&current.questions.contains(id),"agenda receipt identity differs");
++                        ticket=quote_json(id);
++                    }
++                    payload="{\"schema\":\"pcgm-agenda-enrollment-receipt-v1\",\"actor\":"+quote_json(actor)+
++                        ",\"head_sha256\":"+quote_json(key)+",\"approval_sha256\":"+quote_json(pin)+
++                        ",\"status\":"+quote_json(ticket=="null"?"not_recorded":"recorded")+",\"ticket\":"+ticket+
++                        ",\"writes_state\":false}";
++                }
++            }else if(!channel&&op=="review"){
+                 require(bool(arg>>from>>to)&&!(arg>>extra)&&row==op+" "+from+" "+to,
+                         "expected canonical review FROM TO");
+                 for(const auto& label:{from,to}){Parser p{label};require(p.name()==label,"invalid review route");p.end();}
+@@ -79,6 +113,14 @@ int resident_obligation(StateStore& store,int approval_fd){
+                     ",\"proof_sha256\":"+quote_json(proof)+",\"writes_state\":"+(receipt.committed?"true":"false")+
+                     ",\"outbound\":false}";
+             } else require(false,"operation is not enabled on this resident channel");
++            if(schedule_agenda&&channel){
++                const auto [current,key]=owned();
++                if(key!=last_scheduled){
++                    payload.pop_back();
++                    payload+=",\"next_agenda\":"+agenda_report(current,key)+"}";
++                    last_scheduled=key;
++                }
++            }
+             cout<<"{\"channel\":"<<quote_json(name)<<",\"ok\":true,\"payload\":"<<payload<<"}\n";
+         }catch(const exception& ex){
+             cout<<"{\"channel\":"<<quote_json(name)<<",\"ok\":false,\"error\":"<<quote_json(ex.what())<<"}\n";
+diff --git a/pcgm-src/synth.inc b/pcgm-src/synth.inc
+index 8dc914271d6c68852446ba0689153e28b98c43f4..320de5bbeca9d117f9f869e9215fb5a3af7cbaec 100644
+--- a/pcgm-src/synth.inc
++++ b/pcgm-src/synth.inc
+@@ -2,16 +2,18 @@ struct Generated {
+     optional<Atom> header;
+     map<int,Atom> body;
+ };
+-bool proof_without_conflict(const Table& t,const Atom& root){
++bool proof_without_conflict(const Table& t,const Atom& root,bool* limited){
++    if(limited)*limited=false;
+     vector<Atom> queue{root};set<Atom> seen;
+     for(size_t i=0;i<queue.size();++i){
+         const auto a=queue[i];
+         if(!seen.insert(a).second)continue;
+-        if(seen.size()>512||!t.facts.contains(a)||t.facts.contains(opposite_of(a)))return false;
++        if(seen.size()>512){if(limited)*limited=true;return false;}
++        if(!t.facts.contains(a)||t.facts.contains(opposite_of(a)))return false;
+         const auto& proof=t.facts.at(a);
+         for(const auto& f:proof.parents){
+             if(!seen.contains(f))queue.push_back(f);
+-            if(queue.size()>4096)return false;
++            if(queue.size()>4096){if(limited)*limited=true;return false;}
+         }
+     }
+     return true;
+diff --git a/pcgm-src/work-agenda.inc b/pcgm-src/work-agenda.inc
+new file mode 100644
+index 0000000000000000000000000000000000000000..548b34deee465d808577098f10d758e730243f05
+--- /dev/null
++++ b/pcgm-src/work-agenda.inc
+@@ -0,0 +1,143 @@
++// A candidate is a typed rule head grounded by a live relational body witness.
++// The rule may reorder, project, or constrain arguments. No Cartesian product
++// of constants and predicate names is considered.
++struct AgendaDiscovery {
++    map<Atom,pair<Atom,size_t>> targets;
++    vector<Atom> eligible;
++    optional<pair<Atom,Atom>> choice;
++    string review,grounding,limit;
++    size_t unclean=0,disputed_dependencies=0,settled=0,covered=0;
++
++    string reason()const{
++        if(!limit.empty())return "scan_truncated";
++        if(eligible.size()>1)return "tied";
++        if(eligible.size()==1)return "pending_approval";
++        if(covered)return "already_ticketed";
++        if(disputed_dependencies)return "contested_dependencies";
++        if(!targets.empty())return "no_distinguishing_gap";
++        if(unclean)return "contested_or_unverified_grounding";
++        if(settled)return "already_decided";
++        return "insufficient_evidence";
++    }
++    string json(const Continuity& state,const string& revision)const{
++        const bool unique=limit.empty()&&eligible.size()==1;
++        ostringstream out;
++        out<<"{\"schema\":\"pcgm-work-agenda-v1\",\"actor\":"<<quote_json(state.id)
++           <<",\"revision_sha256\":"<<quote_json(revision)<<",\"scope\":\"typed_single_witness_rule_heads\""
++           <<",\"reason\":"<<quote_json(reason())<<",\"limit\":"<<(limit.empty()?"null":quote_json(limit))
++           <<",\"search_complete\":"<<(limit.empty()?"true":"false")<<",\"eligible_count\":"
++           <<(limit.empty()?to_string(eligible.size()):"null")<<",\"eligible_goals\":[";
++        if(limit.empty())for(size_t i=0;i<eligible.size();++i){if(i)out<<',';json_atom(out,eligible[i]);}
++        out<<"],\"ticketed_count\":"<<covered<<",\"grounding\":"<<(unique?grounding:"null")
++           <<",\"proposed_review\":"<<(unique?review:"null")
++           <<",\"review_sha256\":"<<(unique?quote_json(sha256(review)):"null")
++           <<",\"writes_state\":false,\"outbound\":false}";
++        return out.str();
++    }
++};
++
++optional<Atom> ground_agenda_head(const Atom& head,const Atom& pattern,const Atom& fact){
++    map<string,string> bindings;
++    for(size_t i=0;i<pattern.args.size();++i){
++        const auto& term=pattern.args[i];
++        if(!variable(term)){
++            if(term!=fact.args[i])return nullopt;
++        }else{
++            const auto [at,inserted]=bindings.emplace(term,fact.args[i]);
++            if(!inserted&&at->second!=fact.args[i])return nullopt;
++        }
++    }
++    auto target=substitute(head,bindings);
++    if(ranges::any_of(target.args,variable))return nullopt;
++    target.pred=base_name(target);
++    return target;
++}
++
++AgendaDiscovery scan_agenda(const Continuity& state,const string& revision,const Program& program,const Table* known=nullptr,const Atom* focus=nullptr){
++    AgendaDiscovery scan;
++    if(program.rules.size()>256 || program.observations.size()>2048){
++        scan.limit="program_scope";return scan;
++    }
++    try{
++        Table computed;
++        if(!known)computed=run(program,state.inactive);
++        const auto& actual=known?*known:computed;
++        size_t probes=0;
++        for(size_t i=0;i<program.rules.size();++i){
++            const auto& rule=program.rules[i];
++            if(focus&&base_name(rule.head)!=focus->pred)continue;
++            if(!program.signatures.contains(base_name(rule.head)))continue;
++            for(const auto& pattern:rule.body){
++                if(comparison(pattern.pred)||!program.signatures.contains(base_name(pattern)))continue;
++                for(auto it=actual.facts.lower_bound({pattern.pred,{}});it!=actual.facts.end()&&it->first.pred==pattern.pred;++it){
++                    if(++probes>4096){scan.limit="grounding_probes";return scan;}
++                    auto target=ground_agenda_head(rule.head,pattern,it->first);
++                    if(!target||(focus&&*target!=*focus)||scan.targets.contains(*target))continue;
++                    if(actual.facts.contains(*target)||actual.facts.contains(opposite_of(*target))){++scan.settled;continue;}
++                    bool limited=false;
++                    if(!proof_without_conflict(actual,it->first,&limited)){
++                        if(limited){scan.limit="grounding_proof";return scan;}
++                        ++scan.unclean;continue;
++                    }
++                    if(scan.targets.size()>=16){scan.limit="grounded_targets";return scan;}
++                    scan.targets.emplace(*target,pair{it->first,i});
++                }
++            }
++        }
++        for(const auto& [goal,basis]:scan.targets){
++            bool eligible=false,incomplete=false,clean=true;
++            Atom need;
++            auto review=compiled_goal_obligation(state,program,revision,goal,true,&eligible,&incomplete,&need,&clean);
++            if(incomplete){scan.limit="premise_scan";return scan;}
++            if(!eligible)continue;
++            if(!clean){++scan.disputed_dependencies;continue;}
++            if(!focus&&ranges::any_of(state.questions,[&](const auto& item){return matches_question(item.second,need);})){
++                ++scan.covered;continue;
++            }
++            scan.eligible.push_back(goal);
++            if(scan.eligible.size()==1){
++                scan.choice=pair{goal,need};
++                scan.review=move(review);
++                ostringstream context;
++                const auto& [witness,ordinal]=basis;
++                context<<"{\"rule_number\":"<<(program.rule_numbers.empty()?ordinal+1:program.rule_numbers.at(ordinal))
++                       <<",\"witness\":";json_atom(context,witness);
++                context<<",\"proof\":";json_branch(context,actual,witness);context<<'}';
++                scan.grounding=context.str();
++            }
++        }
++    }catch(const runtime_error& error){
++        const string message=error.what();
++        if(message!="join budget"&&message!="fixpoint budget"&&message!="fact limit")throw;
++        scan.limit=message;
++    }
++    return scan;
++}
++
++AgendaDiscovery discover_agenda(const Continuity& state,const string& revision){
++    return scan_agenda(state,revision,compile_active(state));
++}
++
++// Recover the approved ticket's live dependency basis independently of new
++// competing targets. An unrelated dialogue turn does not change its address.
++string agenda_ticket_context(const Continuity& state,const Program& program,const Table& table,const LocalQuestion& q){
++    const auto seed=sha256("PCGM-AGENDA-TICKET-CONTEXT-1\n"+state.id+"\n"+show(q.goal)+"\n"+show(q.fact));
++    const auto scan=scan_agenda(state,seed,program,&table,&q.goal);
++    if(!scan.limit.empty()||!scan.choice||scan.choice->second!=q.fact)return {};
++    SliceStats scope;
++    const auto slice=query_slice(program,{q.goal},scope);
++    string rules;
++    for(size_t i=0;i<slice.rules.size();++i){
++        rules+=show(slice.rules[i].head)+" <-";
++        for(const auto& term:slice.rules[i].body)rules+=" "+show(term);
++        if(const auto guard=slice.live_guards.find(i);guard!=slice.live_guards.end())rules+=" guard "+guard->second;
++        rules+='\n';
++    }
++    return sha256(seed+"\n"+rules+scan.grounding+"\n"+scan.review);
++}
++
++string agenda_approval(const string& actor,const string& head,const string& review){
++    require(actor.size()==32&&hex_chars(actor)&&head.size()==64&&hex_chars(head)&&review.size()==64&&hex_chars(review),
++            "agenda approval needs an actor and exact revision/review pins");
++    return "PCGM-LOCAL-AGENDA-APPROVAL-1\n"+actor+"\n"+head+"\n"+review+"\n";
++}

@@ -1,0 +1,81 @@
+{
+  "joint25-cl": {
+    "slot": "L",
+    "id": "joint25-cl",
+    "name": "CL · Gemini 中文 · DeepSeek 候选词库",
+    "version": "2026.11.25-win.2.4",
+    "interface_version": "zaizai.slots/1",
+    "capabilities": [
+      "L1",
+      "L2",
+      "L3",
+      "L4",
+      "L5",
+      "L6"
+    ],
+    "value_domain": {
+      "support": "POSITIVE",
+      "counter": "NEGATIVE",
+      "insufficient": "UNKNOWN",
+      "conflict": "CONFLICT"
+    },
+    "state_format": "joint25-language-session/1",
+    "formats": [
+      ".cl"
+    ],
+    "provider_type": "joint-native",
+    "artifacts": {
+      "releases/joint25/bin/cl.exe": "1234d0df352ada0d3e8f5eac4e94ba5558a438ed0567fbea13c3631fd9ea8af4",
+      "releases/joint25/bin/cl_runtime.dll": "86bc8e2374a05f60675865f461ff5dfeebb028dc77a93deab01eecb1ae8e0a0e",
+      "releases/joint25/bin/cl_memory.dll": "3012d57dcc663ad8857c07cd9d3555a2e5716c1389bf709e99a8af1e4995acc4",
+      "learning_materials/release25-lexicon/lexicon-r002.sqlite": "804c708ee9f773e6664df734064c6666818f24b13649d9a0d906d37f1bae05f7",
+      "lexicon/lexicon_core.clpkg": "0109b3b1ebdc047765d5bfa0b8df815e961c509869394b0d1650d91b33c9eaaf",
+      "lexicon/lexicon_core.cl": "deca13b92a44d0cb00022be2c41a6bb3579e213f2480e3c6ac8183b82bb144a2",
+      "releases/joint25/language/zaizai_adapter/__init__.py": "25fe1a168d77483c1e660aac4f408f6e7bf9cad63651fd56d350ae7f41515e2c",
+      "releases/joint25/language/zaizai_adapter/cli.py": "f2c25fdbc53390a40b146f90106a743f0893100b44845ad6b338d755edb898b9",
+      "releases/joint25/language/zaizai_adapter/lexicon.py": "e827036ded894fc0734f7f4502462297c304f1fb3f163f611a60daee63a66b9f",
+      "releases/joint25/language/zaizai_adapter/native_bridge.py": "aa2270774c205c0b8997d5da9a8bda8fb5b407f9537780f2962bc45728be579f",
+      "releases/joint25/language/zaizai_adapter/schema.py": "86b919c337bff0aca2565069b3338c4177b5a9acb4837d4cda7a572469fc4489",
+      "releases/joint25/language/zaizai_adapter/stage_a.py": "e55c1c40a4cb3c3a6bc654ef72353771c992b77aad4ddf95a5eb281618814053",
+      "releases/joint25/language/zaizai_adapter/stage_b.py": "05262bbbf024a6e9314b00c251cd86ce33adc0b01564e66d4f3b10709fe1baba",
+      "releases/joint25/language/zaizai_adapter/stage_c.py": "84fe515f409bdb3b8f68bed73f6ccc6b3499abbec4ed34df6cf7e33865d57b9d",
+      "releases/joint25/language/zaizai_adapter/stage_d.py": "a7b62df67d76aa62735f2b6d9ff014b8f1c16078d7b41f832fc64de460d32c21",
+      "releases/joint25/assets/operators.json": "ffef594c83b0b348526313733313d6a037dd4405bc4330cd654084cedf0c2b7a"
+    },
+    "baseline": "9e456752f08769fb3757c21665587c847ec3104a87be7b4fb306bee892af2f31",
+    "patch_sha256": "907358ae24439eb4cdd500ad085e028d53bfc91f1dbb8199180052dc7a6d48dd",
+    "limits": "按词义候选与原生已声明范围核验；保留不确定项及来源。"
+  },
+  "joint25-pcgm": {
+    "slot": "C",
+    "id": "joint25-pcgm",
+    "name": "PCGM · Codex 合流 Windows",
+    "version": "2026.11.25-win.2.4",
+    "interface_version": "zaizai.slots/1",
+    "capabilities": [
+      "C1",
+      "C2",
+      "C3",
+      "C4",
+      "C5",
+      "C6",
+      "C7",
+      "C8",
+      "C9"
+    ],
+    "value_domain": {},
+    "state_format": "opaque-pcgm-managed/0.159+core25",
+    "formats": [],
+    "provider_type": "joint-native",
+    "artifacts": {
+      "releases/joint25/bin/pcgm-alpha.exe": "c3e8bbbb8e7f82b0014fdae4f72d6942f08cfc68515b2f93119246ab27f1ac57",
+      "releases/joint25/bin/pcgm-beta.exe": "5a7ceb1c18876ae968c2a0e7da72a9f5af79b89637c1a9bfa1dfe36564af65db",
+      "releases/joint25/assets/dialogue25.cl": "371fe27596db79243dc06d8080a602d00ae15ca11c04cb959c1d7773d1509e04",
+      "releases/joint25/tools/joint25_gateway.py": "1b9f4e891066162996ae2fb80c153b5aa5633734b62000c81eb56088eaff962c",
+      "releases/joint25/tools/joint25_handoff.py": "59d6ddec25779537e2ee030274d3f3d15079bf3e8826d5fbf8954c04a85c594e"
+    },
+    "baseline": "9e456752f08769fb3757c21665587c847ec3104a87be7b4fb306bee892af2f31",
+    "patch_sha256": "907358ae24439eb4cdd500ad085e028d53bfc91f1dbb8199180052dc7a6d48dd",
+    "limits": "按词义候选与原生已声明范围核验；保留不确定项及来源。"
+  }
+}

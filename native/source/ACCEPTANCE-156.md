@@ -1,0 +1,5 @@
+# PCGM atomic local evidence corrections
+
+Enable PCGM's existing local single-writer channel to apply one exact-head observation transaction containing 1–8 creates/withdrawals/restorations of distinct ordinary observation identifiers. Publish one durable state, establish an exact request receipt strictly bound to the previous head and request ID, and return the original receipt on an exact retry even after restart/A/B. A stale base, repeat ID with different bytes, invalid type or operation, unsupported source authority, mixed valid/invalid items or pending concurrent choice must not publish a partial state. No new scheduler, network ingress, CL decision authority, or deployment. Each observation edit advances the existing observation version; subscribers only see before-to-final proof changes.
+
+Test native managed A/B state, exact read-only receipt and proof, stale/failed and mixed inputs, withheld intermediate conflict, lost reply/real hard stop, SIGKILL around commit, receipt/source integrity, archive compaction and exact replay, including UTF-8 values that contain separators. Preserve earlier legacy operations and stored states.

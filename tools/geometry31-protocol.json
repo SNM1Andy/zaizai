@@ -1,0 +1,38 @@
+{
+  "schema": "zaizai-local-geometry-acceptance/1",
+  "engine": "PCGM 0.159 Windows x64 CPU",
+  "author": "Zaizai local host integration; original upstream geometry.cl was not supplied",
+  "frozen_before_run": true,
+  "comparison": {
+    "absolute_tolerance": 1e-12,
+    "relative_tolerance": 1e-12,
+    "discrete_fields": "exact",
+    "nonfinite": "rejected"
+  },
+  "feature_order": [
+    "energy",
+    "mean_amplitude",
+    "max_amplitude",
+    "min_amplitude",
+    "variance",
+    "spatial_gradient_energy"
+  ],
+  "field_bias_order": [
+    "exploration",
+    "persistence",
+    "switching"
+  ],
+  "actions": [
+    "inspect",
+    "work",
+    "wait"
+  ],
+  "contexts": [
+    "inflow",
+    "quiet",
+    "outflow"
+  ],
+  "policy": "Use only temporary native context and budget sensor observations. No persistent permission facts, external effects, objectives, priorities for primordial symbols, or emotional labels.",
+  "timing": "field_bias is pre-choice after context drive; field_status features are post-action, or the initialized point for tick 0. No pre-choice six-vector is emitted by 0.159.",
+  "replay": "Same frozen native snapshot. Branch 1 one uninterrupted native process; branch 2 fresh native process before every tick plus a final reopen. All actions, event indices, states, truth, eligibility, source IDs, budget, completed count and final native snapshot head must agree. Floats use frozen absolute/relative tolerance."
+}

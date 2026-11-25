@@ -1,0 +1,7 @@
+: cert_fee(sym,qty(cny_cent)).
+: cheap(sym).
+& a cert_fee(case1,45@cny_cent).
+& b cert_fee(case2,60@cny_cent).
+cheap($x) <- cert_fee($x,$c) & qty_lt($c,50@cny_cent).
+? cheap(case1).
+? cheap(case2).

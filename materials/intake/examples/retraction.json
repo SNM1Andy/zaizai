@@ -1,0 +1,16 @@
+{
+  "schema": "correction_retraction_v1",
+  "event_id": "evt-gazette-retract-100",
+  "kind": "retraction",
+  "subject_source_version_id": "srcver-gazette-100",
+  "new_source_version_id": "srcver-gazette-80",
+  "detected_at": "2026-11-23T01:00:00Z",
+  "affected_proposition_ids": [
+    "prop-count-100",
+    "prop-count-80"
+  ],
+  "keeps_independent_observations": true,
+  "replay_writes": false,
+  "history_overwritten": false,
+  "reason": "公报撤回“报名人数为 100”的通稿，另发更正为 80。图书馆的独立计数不删除。"
+}

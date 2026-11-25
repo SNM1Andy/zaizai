@@ -1,0 +1,18 @@
+- id: sdk-jsonrpc-server
+  disabled: true
+- id: schedule
+  disabled: true
+- id: session-log-deepseek
+  disabled: true
+- id: session-telemetry-otel
+  disabled: true
+- id: llm-retry
+  disabled: true
+- id: llm-deepseek-account
+  config:
+    baseURL: 'https://api.deepseek.com/anthropic'
+- insert:
+    - id: zaizai-advisory
+      name: './terms.mjs'
+
+

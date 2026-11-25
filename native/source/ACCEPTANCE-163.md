@@ -1,0 +1,2 @@
+# Embedding verified CL frozen integrity, without any subprocess
+Expose the same deterministic checked frozen proof report to native hosts over a versioned, pure buffer C ABI, with no assumption they can install a shell or runtime executable. Both full and memory-only SDK must advertise the additive feature and independently emit byte-for-byte CLI results, reject invalid pins and invalid buffer ownership, and work concurrently in relocated hosts. Old SDK ABI and historical signed receipts remain unchanged. Never admit evidence or touch a PCGM state from this entry point.

@@ -1,0 +1,21 @@
+{
+  "source": "zaizai_curriculum_complete.zip",
+  "source_archive_sha256": "4c94d89651fc34a401e812943476e961d309e0ed47ff9e145f31a5ebb31ac2d9",
+  "source_member": "zaizai_curriculum/zaizai-curriculum-corpus.jsonl",
+  "cards": 300,
+  "grade_counts": {
+    "G1": 60,
+    "G2": 60,
+    "G3": 60,
+    "G4": 60,
+    "G5": 60
+  },
+  "subject_counts": {
+    "数学与数量逻辑": 50,
+    "自然科学与因果": 50,
+    "语文语义与表达": 50,
+    "道德法治与制度": 50,
+    "生活经济与风险": 50,
+    "人际沟通与修复": 50
+  }
+}

@@ -1,0 +1,7 @@
+CL-AST-SCOPE-1
+read spent
+read remaining
+read qty_le
+read qty_sub
+write remaining
+write affordable

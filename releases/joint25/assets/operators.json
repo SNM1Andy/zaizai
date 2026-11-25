@@ -1,0 +1,326 @@
+{
+  "schema": "cl-lexicon-sense-v1",
+  "lexicon_version": "windows-interface-20261125-r1",
+  "entries": [
+    {
+      "sense_id": "interface.readable",
+      "kind": "predicate",
+      "canonical": "readable",
+      "surface_forms": [
+        "能读",
+        "可读",
+        "可以读",
+        "能不能读",
+        "可以阅读"
+      ],
+      "arg_types": [
+        "sym"
+      ],
+      "status": "reviewed",
+      "notes": "本地语言接口候选映射；没有对对象断言事实"
+    },
+    {
+      "sense_id": "interface.verified",
+      "kind": "predicate",
+      "canonical": "verified",
+      "surface_forms": [
+        "已核对",
+        "核对完成",
+        "校对完成",
+        "已校对",
+        "通过核对",
+        "核查完成"
+      ],
+      "arg_types": [
+        "sym"
+      ],
+      "status": "reviewed",
+      "notes": "本地语言接口候选映射；没有对对象断言事实"
+    },
+    {
+      "sense_id": "interface.copy_ready",
+      "kind": "predicate",
+      "canonical": "copy_ready",
+      "surface_forms": [
+        "副本就绪",
+        "副本可用",
+        "已备妥"
+      ],
+      "arg_types": [
+        "sym"
+      ],
+      "status": "reviewed",
+      "notes": "本地语言接口候选映射；没有对对象断言事实"
+    },
+    {
+      "sense_id": "interface.borrow",
+      "kind": "predicate",
+      "canonical": "borrow",
+      "surface_forms": [
+        "借出",
+        "外借",
+        "借阅"
+      ],
+      "arg_types": [
+        "sym"
+      ],
+      "status": "reviewed",
+      "notes": "本地语言接口候选映射；没有对对象断言事实"
+    },
+    {
+      "sense_id": "interface.same_copy",
+      "kind": "predicate",
+      "canonical": "same_copy",
+      "surface_forms": [
+        "同一个副本",
+        "同一副本",
+        "同一份"
+      ],
+      "arg_types": [
+        "sym",
+        "sym"
+      ],
+      "status": "reviewed",
+      "notes": "本地语言接口候选映射；没有对对象断言事实"
+    },
+    {
+      "sense_id": "interface.qty_add",
+      "kind": "operator",
+      "canonical": "qty_add",
+      "surface_forms": [
+        "加",
+        "加上",
+        "+",
+        "相加",
+        "之和"
+      ],
+      "arg_types": [
+        "nat",
+        "nat",
+        "nat"
+      ],
+      "status": "reviewed",
+      "notes": "本地语言接口候选映射；没有对对象断言事实"
+    },
+    {
+      "sense_id": "interface.qty_equiv",
+      "kind": "predicate",
+      "canonical": "qty_equiv",
+      "surface_forms": [
+        "一回事",
+        "等价",
+        "相等"
+      ],
+      "arg_types": [
+        "quantity",
+        "quantity"
+      ],
+      "status": "reviewed",
+      "notes": "本地语言接口候选映射；没有对对象断言事实"
+    },
+    {
+      "sense_id": "interface.shelf_a",
+      "kind": "entity",
+      "canonical": "shelf_a",
+      "surface_forms": [
+        "甲架",
+        "甲架这份",
+        "甲书架"
+      ],
+      "status": "reviewed",
+      "notes": "本地语言接口候选映射；没有对对象断言事实"
+    },
+    {
+      "sense_id": "interface.shelf_b",
+      "kind": "entity",
+      "canonical": "shelf_b",
+      "surface_forms": [
+        "乙架",
+        "乙架这份",
+        "乙书架"
+      ],
+      "status": "reviewed",
+      "notes": "本地语言接口候选映射；没有对对象断言事实"
+    },
+    {
+      "sense_id": "interface.doc_a",
+      "kind": "entity",
+      "canonical": "doc_a",
+      "surface_forms": [
+        "甲资料",
+        "第一份资料",
+        "资料A"
+      ],
+      "status": "reviewed",
+      "notes": "本地语言接口候选映射；没有对对象断言事实"
+    },
+    {
+      "sense_id": "interface.doc_b",
+      "kind": "entity",
+      "canonical": "doc_b",
+      "surface_forms": [
+        "乙资料",
+        "第二份资料",
+        "资料B"
+      ],
+      "status": "reviewed",
+      "notes": "本地语言接口候选映射；没有对对象断言事实"
+    },
+    {
+      "sense_id": "interface.spare_part",
+      "kind": "entity",
+      "canonical": "spare_part",
+      "surface_forms": [
+        "备用件",
+        "备份"
+      ],
+      "status": "reviewed",
+      "notes": "本地语言接口候选映射；没有对对象断言事实"
+    },
+    {
+      "sense_id": "interface.data_backup",
+      "kind": "entity",
+      "canonical": "data_backup",
+      "surface_forms": [
+        "数据备份",
+        "备份"
+      ],
+      "status": "reviewed",
+      "notes": "本地语言接口候选映射；没有对对象断言事实"
+    },
+    {
+      "sense_id": "interface.r28_remembers",
+      "kind": "predicate",
+      "canonical": "r28_remembers",
+      "surface_forms": [
+        "还记得",
+        "记得"
+      ],
+      "arg_types": [
+        "sym"
+      ],
+      "status": "reviewed",
+      "notes": "本机可核验的接口，真值另由 PCGM 决定"
+    },
+    {
+      "sense_id": "interface.identity_restored",
+      "kind": "predicate",
+      "canonical": "identity_restored",
+      "surface_forms": [
+        "身份已恢复",
+        "恢复了身份"
+      ],
+      "arg_types": [
+        "sym"
+      ],
+      "status": "reviewed",
+      "notes": "本机可核验的接口，真值另由 PCGM 决定"
+    },
+    {
+      "sense_id": "interface.receipt_available",
+      "kind": "predicate",
+      "canonical": "receipt_available",
+      "surface_forms": [
+        "有回执",
+        "已存回执"
+      ],
+      "arg_types": [
+        "sym"
+      ],
+      "status": "reviewed",
+      "notes": "本机可核验的接口，真值另由 PCGM 决定"
+    },
+    {
+      "sense_id": "interface.certified",
+      "kind": "predicate",
+      "canonical": "certified",
+      "surface_forms": [
+        "已经核实",
+        "已获认证"
+      ],
+      "arg_types": [
+        "sym"
+      ],
+      "status": "reviewed",
+      "notes": "本机可核验的接口，真值另由 PCGM 决定"
+    },
+    {
+      "sense_id": "interface.ready_to_use",
+      "kind": "predicate",
+      "canonical": "ready_to_use",
+      "surface_forms": [
+        "可以使用",
+        "可用了吗"
+      ],
+      "arg_types": [
+        "sym"
+      ],
+      "status": "reviewed",
+      "notes": "本机可核验的接口，真值另由 PCGM 决定"
+    },
+    {
+      "sense_id": "interface.ready_item",
+      "kind": "predicate",
+      "canonical": "ready_item",
+      "surface_forms": [
+        "准备好",
+        "就绪",
+        "好了没",
+        "好了"
+      ],
+      "arg_types": [
+        "sym"
+      ],
+      "status": "reviewed",
+      "notes": "本机可核验的接口，真值另由 PCGM 决定"
+    },
+    {
+      "sense_id": "interface.zaizai",
+      "kind": "entity",
+      "canonical": "zaizai",
+      "surface_forms": [
+        "再再本人",
+        "本机再再"
+      ],
+      "arg_types": [],
+      "status": "reviewed",
+      "notes": "本机可核验的接口，真值另由 PCGM 决定"
+    },
+    {
+      "sense_id": "interface.object_0000",
+      "kind": "entity",
+      "canonical": "object_0000",
+      "surface_forms": [
+        "object_0000",
+        "原存档第一个对象"
+      ],
+      "arg_types": [],
+      "status": "reviewed",
+      "notes": "本机可核验的接口，真值另由 PCGM 决定"
+    },
+    {
+      "sense_id": "interface.object_0001",
+      "kind": "entity",
+      "canonical": "object_0001",
+      "surface_forms": [
+        "object_0001",
+        "原存档第二个对象"
+      ],
+      "arg_types": [],
+      "status": "reviewed",
+      "notes": "本机可核验的接口，真值另由 PCGM 决定"
+    },
+    {
+      "sense_id": "interface.local_term",
+      "kind": "entity",
+      "canonical": "local_term",
+      "surface_forms": [
+        "本地词条"
+      ],
+      "arg_types": [],
+      "status": "reviewed",
+      "notes": "本机可核验的接口，真值另由 PCGM 决定"
+    }
+  ],
+  "source": "Gemini operator grammar and Windows host predicates; separate from the DeepSeek candidate corpus"
+}

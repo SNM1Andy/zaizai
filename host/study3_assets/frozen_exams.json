@@ -1,0 +1,209 @@
+{
+  "C-01": {
+    "independent": [
+      {
+        "id": "hold_a",
+        "context": "实验计时",
+        "features": [
+          "empirical",
+          "exclusion"
+        ],
+        "expected": "POSITIVE"
+      },
+      {
+        "id": "hold_b",
+        "context": "对照试验",
+        "features": [
+          "fits_all"
+        ],
+        "expected": "NEGATIVE"
+      },
+      {
+        "id": "hold_c",
+        "context": "运行日志",
+        "features": [
+          "empirical",
+          "sample_a"
+        ],
+        "expected": "UNKNOWN"
+      }
+    ],
+    "transfer": [
+      {
+        "id": "design_a",
+        "context": "模糊预言",
+        "features": [
+          "empirical",
+          "exclusion",
+          "unseen_signal"
+        ],
+        "expected": "POSITIVE"
+      },
+      {
+        "id": "design_b",
+        "context": "估算及其反例",
+        "features": [
+          "fits_all",
+          "exclusion"
+        ],
+        "expected": "NEGATIVE"
+      },
+      {
+        "id": "design_c",
+        "context": "登记猜想",
+        "features": [
+          "empirical",
+          "exclusion",
+          "fits_all"
+        ],
+        "expected": "CONFLICT"
+      },
+      {
+        "id": "design_d",
+        "context": "仅有外围线索",
+        "features": [
+          "unseen_signal"
+        ],
+        "expected": "UNKNOWN"
+      }
+    ]
+  },
+  "C-10": {
+    "independent": [
+      {
+        "id": "hold_a",
+        "context": "文稿版本",
+        "features": [
+          "backup",
+          "restore_checked"
+        ],
+        "expected": "POSITIVE"
+      },
+      {
+        "id": "hold_b",
+        "context": "录音替换",
+        "features": [
+          "rollback_impossible"
+        ],
+        "expected": "NEGATIVE"
+      },
+      {
+        "id": "hold_c",
+        "context": "笔记修订",
+        "features": [
+          "backup",
+          "sample_a"
+        ],
+        "expected": "UNKNOWN"
+      }
+    ],
+    "transfer": [
+      {
+        "id": "design_a",
+        "context": "配置迁移",
+        "features": [
+          "backup",
+          "restore_checked",
+          "unseen_signal"
+        ],
+        "expected": "POSITIVE"
+      },
+      {
+        "id": "design_b",
+        "context": "绘图修改",
+        "features": [
+          "rollback_impossible",
+          "restore_checked"
+        ],
+        "expected": "NEGATIVE"
+      },
+      {
+        "id": "design_c",
+        "context": "草稿恢复",
+        "features": [
+          "backup",
+          "restore_checked",
+          "rollback_impossible"
+        ],
+        "expected": "CONFLICT"
+      },
+      {
+        "id": "design_d",
+        "context": "仅有外围线索",
+        "features": [
+          "unseen_signal"
+        ],
+        "expected": "UNKNOWN"
+      }
+    ]
+  },
+  "C-11": {
+    "independent": [
+      {
+        "id": "hold_a",
+        "context": "航班记录",
+        "features": [
+          "direct_record",
+          "time_given"
+        ],
+        "expected": "POSITIVE"
+      },
+      {
+        "id": "hold_b",
+        "context": "快递签收",
+        "features": [
+          "only_motive_guess"
+        ],
+        "expected": "NEGATIVE"
+      },
+      {
+        "id": "hold_c",
+        "context": "图书借阅",
+        "features": [
+          "direct_record",
+          "sample_a"
+        ],
+        "expected": "UNKNOWN"
+      }
+    ],
+    "transfer": [
+      {
+        "id": "design_a",
+        "context": "空泛动机",
+        "features": [
+          "direct_record",
+          "time_given",
+          "unseen_signal"
+        ],
+        "expected": "POSITIVE"
+      },
+      {
+        "id": "design_b",
+        "context": "课堂日志",
+        "features": [
+          "only_motive_guess",
+          "time_given"
+        ],
+        "expected": "NEGATIVE"
+      },
+      {
+        "id": "design_c",
+        "context": "证词矛盾",
+        "features": [
+          "direct_record",
+          "time_given",
+          "only_motive_guess"
+        ],
+        "expected": "CONFLICT"
+      },
+      {
+        "id": "design_d",
+        "context": "仅有外围线索",
+        "features": [
+          "unseen_signal"
+        ],
+        "expected": "UNKNOWN"
+      }
+    ]
+  }
+}

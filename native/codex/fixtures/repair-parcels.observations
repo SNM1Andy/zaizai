@@ -1,0 +1,5 @@
+:observe stall_a stalled(amber)
+:observe scan_a scanned(amber)
+:observe stall_b stalled(blue)
+:observe scan_b scanned(blue)
+:observe scan_holdout scanned(copper)

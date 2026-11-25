@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "source_version_v1",
+  "title": "来源的一个不可覆盖版本。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "source_version_id",
+    "evidence_family_id",
+    "url",
+    "author_public",
+    "author_verifiable",
+    "published_at",
+    "fetched_at",
+    "content_sha256",
+    "version_seq",
+    "prior_version_id",
+    "summary",
+    "origin_role",
+    "robots",
+    "fetch_status",
+    "citation_chain"
+  ],
+  "properties": {
+    "schema": {
+      "const": "source_version_v1"
+    },
+    "source_version_id": {
+      "type": "string"
+    },
+    "evidence_family_id": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string"
+    },
+    "author_public": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "author_verifiable": {
+      "type": "boolean"
+    },
+    "published_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "fetched_at": {
+      "type": "string"
+    },
+    "content_sha256": {
+      "type": "string"
+    },
+    "version_seq": {
+      "type": "integer"
+    },
+    "prior_version_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "origin_role": {
+      "enum": [
+        "original",
+        "syndication",
+        "copy",
+        "search_snippet",
+        "independent",
+        "unknown"
+      ]
+    },
+    "robots": {
+      "enum": [
+        "allowed",
+        "disallowed",
+        "unknown"
+      ]
+    },
+    "fetch_status": {
+      "enum": [
+        "fetched",
+        "snippet_only",
+        "unread",
+        "paused",
+        "not_fetched"
+      ]
+    },
+    "citation_chain": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
